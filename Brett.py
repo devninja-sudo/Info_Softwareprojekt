@@ -294,7 +294,7 @@ class Brett(pygame.sprite.Sprite):
         relativeMaybePossibleTurnsDatas = self.__getBackTurnsDataByRelativeTurns(relativeMaybePossibleTurnsDatas, possibleRelativeFields)           # Zum Prüfen der Zug Bedingungen Notwendig
         possibleRelativeFields = []
         for relativeMaybePossibleTurnData in relativeMaybePossibleTurnsDatas:               
-            if relativeMaybePossibleTurnData["onlyOnKill"] or relativeMaybePossibleTurnData["canKill"]:                                  
+            if relativeMaybePossibleTurnData["onlyOnKill"] or not(relativeMaybePossibleTurnData["canKill"]):                                  
                 inspectIfKillField = self.getRelativeField(field.getLabel(), relativeMaybePossibleTurnData["point"])
                 if type(inspectIfKillField) != Feld:
                     continue
