@@ -5,12 +5,14 @@ from Springer import Springer
 from Turm import Turm
 from Laeufer import Laeufer
 from FigurDisplay import FigurDisplay
+from Dame import Dame
+from Bauer import Bauer
 
 class Brett(pygame.sprite.Sprite):
     def __init__(self, edge_length:int, topLeftCorner:tuple[int, int], field_color1:str="yellow", field_color2:str="red", rotation:int=0):
         super().__init__()
 
-        self.__onTurnTeam = 1 # Später natürlich 0
+        self.__onTurnTeam = 0 # Später natürlich 0
         self.__cursor = None
         self.__eventMode = None 
         self.__running = False
@@ -52,8 +54,33 @@ class Brett(pygame.sprite.Sprite):
         self.__fields["b8"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 1))
         self.__fields["g8"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 1))
         
-        #
         self.__fields["c8"].setFigure(Laeufer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 1))
+        self.__fields["f8"].setFigure(Laeufer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 1))
+
+        self.__fields["d8"].setFigure(Dame("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 1))
+
+        for i in range(self.__fields_count):
+            fieldLabelLetter = chr(ord(self.__field_label_start_letter)+i)
+            fieldLabelBlack = fieldLabelLetter + "7"
+            fieldLabelWhite = fieldLabelLetter + "2"
+            self.__fields[fieldLabelBlack].setFigure(Bauer("assets/graphics/s_bauer.png", self.__field_length*scale, self.__field_length, 1))
+            self.__fields[fieldLabelWhite].setFigure(Bauer("assets/graphics/s_bauer.png", self.__field_length*scale, self.__field_length, 0))
+
+
+
+
+
+
+        self.__fields["a1"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, 0))
+        self.__fields["h1"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, 0))
+
+        self.__fields["b1"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 0))
+        self.__fields["g1"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 0))
+        
+        self.__fields["c1"].setFigure(Laeufer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 0))
+        self.__fields["f1"].setFigure(Laeufer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 0))
+
+        self.__fields["d1"].setFigure(Dame("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 0))
 
     def setRotation(self, rotation:int):
         if rotation % 90 != 0:
@@ -151,7 +178,14 @@ class Brett(pygame.sprite.Sprite):
             raise "Benötigt ein Cursor Feld"
         
         clickedFigure = clickedField.getFigure()
-        clickedFieldLabel = clickedField.getLabel()       
+        clickedFieldLabel = clickedField.getLabel()   
+
+        if not(clickedField in self.getPossibleTurnFields(self.__cursor)):
+            self.__cursor = None
+            self.__eventMode = "chooseFigure"
+            self.__clearAllFieldHighlights()
+            return
+        
         if clickedFigure !=None:
             if clickedFigure.getTeam() == self.__onTurnTeam:
                 self.__eventMode = "chooseFigure"
@@ -160,11 +194,7 @@ class Brett(pygame.sprite.Sprite):
             else:
                 print("Es wird wohl eine Figur geschlagen!")
         
-        if not(clickedField in self.getPossibleTurnFields(self.__cursor)):
-            self.__cursor = None
-            self.__eventMode = "chooseFigure"
-            self.__clearAllFieldHighlights()
-            return
+
 
         beforeClickedFieldFigure = clickedField.getFigure()
         beforeCursorFigur = self.__cursor.getFigure()
@@ -193,8 +223,7 @@ class Brett(pygame.sprite.Sprite):
         return None # muss noch ordentlich werden
 
     def __switchToOtherPlayer(self):
-        pass
-        #self.__onTurnTeam = (self.__onTurnTeam+1)%2
+        self.__onTurnTeam = (self.__onTurnTeam+1)%2
 
     def __chooseFigureEvent(self, clickedField:Feld):
         clickedFigure = clickedField.getFigure()
@@ -237,22 +266,60 @@ class Brett(pygame.sprite.Sprite):
                 continue
             field.addFieldHighlight("SmallGreenMiddleCircle")
 
-    def __getPossibleRelativeFields(self, Field:Feld):
-        Figure = Field.getFigure()
+    def __getPossibleRelativeFields(self, field:Feld):
+        Figure = field.getFigure()
         if Figure == None:
             return []
         canJump = Figure.getCanJump()
-        relativeMaybePossibleTurnFields = Figure.getRelativeMaybePossibleTurns(Field.getLabel())
+        canKillMates = Figure.getCanKillMates()
+        relativeMaybePossibleTurnsDatas = Figure.getRelativeMaybePossibleTurns(field.getLabel())
+
+        relativeMaybePossibleTurnPoints = []                                                #
+        for relativeMaybePossibleTurnData in relativeMaybePossibleTurnsDatas:               #
+            relativeMaybePossibleTurnPoints.append(relativeMaybePossibleTurnData["point"])  # Zur Weiterverarbeitung sind nur noch die Relativen Punkte notwending 
+
+
         possibleRelativeFields = []
-        for MaybeRelativeField in relativeMaybePossibleTurnFields:
-            inspectionField = self.getRelativeField(Field.getLabel(), MaybeRelativeField)
+        for MaybeRelativeField in relativeMaybePossibleTurnPoints:
+            inspectionField = self.getRelativeField(field.getLabel(), MaybeRelativeField)
             if inspectionField == None:
                 continue           
             possibleRelativeFields.append(MaybeRelativeField)
-        if canJump:
-            return self.__removeKillOwnFiguresInRelatives(possibleRelativeFields, Field)
-        possibleRelativeFields = self.__doNotWalkThroughFigures(possibleRelativeFields, Field)
-        return self.__removeKillOwnFiguresInRelatives(possibleRelativeFields, Field)
+
+        if not(canJump):
+            possibleRelativeFields = self.__doNotWalkThroughFigures(possibleRelativeFields, field)
+        if not(canKillMates):
+            possibleRelativeFields = self.__removeKillOwnFiguresInRelatives(possibleRelativeFields, field)
+
+        relativeMaybePossibleTurnsDatas = self.__getBackTurnsDataByRelativeTurns(relativeMaybePossibleTurnsDatas, possibleRelativeFields)           # Zum Prüfen der Zug Bedingungen Notwendig
+        possibleRelativeFields = []
+        for relativeMaybePossibleTurnData in relativeMaybePossibleTurnsDatas:               
+            if relativeMaybePossibleTurnData["onlyOnKill"] or relativeMaybePossibleTurnData["canKill"]:                                  
+                inspectIfKillField = self.getRelativeField(field.getLabel(), relativeMaybePossibleTurnData["point"])
+                if type(inspectIfKillField) != Feld:
+                    continue
+                if inspectIfKillField.getFigure() == None and relativeMaybePossibleTurnData["onlyOnKill"]:
+                    continue
+                if inspectIfKillField.getFigure() != None and not(relativeMaybePossibleTurnData["canKill"]):
+                    continue
+            possibleRelativeFields.append(relativeMaybePossibleTurnData["point"])  
+
+
+
+        return possibleRelativeFields
+    
+    def __getBackTurnsDataByRelativeTurns(self, relativePossibleTurnsDatas:list, points:list[tuple[int, int]])->list:
+        result = []
+        for point in points:
+            result.append(self.__getBackTurnDataByRalativeTurn(relativePossibleTurnsDatas, point))
+        return result
+
+    def __getBackTurnDataByRalativeTurn(self, relativePossibleTurnsDatas, point):
+        for relativePossibleTurnData in relativePossibleTurnsDatas:
+            controlPoint = relativePossibleTurnData["point"]
+            if controlPoint == point:
+                return relativePossibleTurnData
+
     
     def __removeKillOwnFiguresInRelatives(self, RelativeFields:list[tuple], StartField:Feld)->list:
         result = []
