@@ -12,28 +12,28 @@ class Brett(pygame.sprite.Sprite):
     def __init__(self, edge_length:int, topLeftCorner:tuple[int, int], field_color1:str="yellow", field_color2:str="red", rotation:int=0):
         super().__init__()
 
-        self.__onTurnTeam = 0 # Später natürlich 0
+        self.__onTurnTeam:int = 0 # Später natürlich 0
         self.__cursor = None
-        self.__eventMode = None 
-        self.__running = False
+        self.__eventMode:str = None 
+        self.__running:bool = False
 
-        self.__rotation = rotation
-        self.__edge_length = edge_length
-        self.__fields_count = 8
-        self.__field_length = edge_length//self.__fields_count
+        self.__rotation:int = rotation
+        self.__edge_length:int = edge_length
+        self.__fields_count:int = 8
+        self.__field_length:int = edge_length//self.__fields_count
         
 
-        self.__field_color_1 = field_color1
-        self.__field_color_2 = field_color2
+        self.__field_color_1:str = field_color1
+        self.__field_color_2:str = field_color2
 
-        self.__field_label_start_letter = "a"
+        self.__field_label_start_letter:str = "a"
 
         #die Variablen müssen so heißen und public sein wegen Pygame
-        self.image = pygame.surface.Surface((edge_length, edge_length))
-        self.rect = self.image.get_rect(topleft = topLeftCorner)
+        self.image:pygame.Surface = pygame.surface.Surface((edge_length, edge_length))
+        self.rect:pygame.Rect = self.image.get_rect(topleft = topLeftCorner)
 
-        self.__fields = self.__createFields()
-        self.__fieldsGroup = self.__createFieldsGroup()
+        self.__fields:dict = self.__createFields()
+        self.__fieldsGroup:pygame.sprite.Group = self.__createFieldsGroup()
         self.__setupBrett()
         self.update()
 
@@ -47,7 +47,7 @@ class Brett(pygame.sprite.Sprite):
 
     def __setupBrett(self):
         #Wird später sauberer geschrieben !!!
-        scale = 0.9
+        scale:float = 0.9
         self.__fields["a8"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, 1))
         self.__fields["h8"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, 1))
 
@@ -59,17 +59,8 @@ class Brett(pygame.sprite.Sprite):
 
         self.__fields["d8"].setFigure(Dame("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 1))
 
-        for i in range(self.__fields_count):
-            fieldLabelLetter = chr(ord(self.__field_label_start_letter)+i)
-            fieldLabelBlack = fieldLabelLetter + "7"
-            fieldLabelWhite = fieldLabelLetter + "2"
-            self.__fields[fieldLabelBlack].setFigure(Bauer("assets/graphics/s_bauer.png", self.__field_length*scale, self.__field_length, 1))
-            self.__fields[fieldLabelWhite].setFigure(Bauer("assets/graphics/s_bauer.png", self.__field_length*scale, self.__field_length, 0))
-
-
-
-
-
+        self.__buildPawnRow(7, scale, "assets/graphics/s_bauer.png", 1)
+        self.__buildPawnRow(2, scale, "assets/graphics/s_bauer.png", 0)
 
         self.__fields["a1"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, 0))
         self.__fields["h1"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, 0))
@@ -82,36 +73,44 @@ class Brett(pygame.sprite.Sprite):
 
         self.__fields["d1"].setFigure(Dame("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 0))
 
-    def setRotation(self, rotation:int):
+
+    def __buildPawnRow(self, RowNumber:int, scale:float, texturePath:str, teamID:int) -> None:
+        for i in range(self.__fields_count):
+            fieldLabelLetter:str = chr(ord(self.__field_label_start_letter)+i)
+            fieldLabel:str = fieldLabelLetter + str(RowNumber)
+            targetField:Feld = self.__fields[fieldLabel]
+            targetField.setFigure(Bauer(texturePath, self.__field_length*scale, self.__field_length, teamID))
+
+
+    def setRotation(self, rotation:int)->None:
         if rotation % 90 != 0:
             raise "Rotation not available!"
-        self.__rotation = rotation
+        self.__rotation:int = rotation
         self.__correctFieldPositions()
 
     def getRotation(self)->int:
         return self.__rotation
     
-    def __correctFieldPositions(self):
+    def __correctFieldPositions(self)->None:
         for key in self.__fields.keys():
-            currentField = self.__fields[key]
-            if type(currentField) != Feld:
-                continue
+            currentField:Feld = self.__fields[key]
             currentField.setFieldPosition(self.__getFieldPositionByName(key))
         self.__generateImage()
 
     def __createFields(self)->dict:
-        fields = {}
+        fields:dict = {}
         for spread in range(ord(self.__field_label_start_letter), ord(self.__field_label_start_letter)+self.__fields_count):
             for lengths in range(1, 1+self.__fields_count):
                 if (spread+lengths)%2 == 1:
                     color = self.__field_color_1
                 else:
                     color = self.__field_color_2 
-                field_label = chr(spread) + str(lengths)
-                field_current = Feld((self.__field_length, self.__field_length), self.__getFieldPositionByName(chr(spread)+str(lengths)), color, field_label)
+                field_label:str = chr(spread) + str(lengths)
+                field_current:Feld = Feld((self.__field_length, self.__field_length), self.__getFieldPositionByName(field_label), color, field_label)
                 fields[field_label] = field_current
         return fields
-        
+    
+
     def __getFieldPositionByName(self, field_name:str)->tuple[int, int]:
         lengthID = int(ord(field_name[0])-ord(self.__field_label_start_letter))
         spreadID = int(field_name[1])
@@ -130,7 +129,7 @@ class Brett(pygame.sprite.Sprite):
         return x, y
     
 
-    def __rotatePoint90degree(self, point:tuple[int, int]):
+    def __rotatePoint90degree(self, point:tuple[int, int])->tuple[int, int]:
         return (self.__edge_length-point[1]-self.__field_length, point[0])
     
     def __getFieldsGroup(self)->pygame.sprite.Group:
@@ -138,8 +137,6 @@ class Brett(pygame.sprite.Sprite):
     
     def __createFieldsGroup(self)->pygame.sprite.Group:
         fieldsGroup = pygame.sprite.Group()
-        if type(self.__fields) != dict:
-            raise "Error: self.__fields should be a dict!"
         
         for key in self.__fields.keys():
             field = self.__fields[key]
@@ -147,21 +144,24 @@ class Brett(pygame.sprite.Sprite):
 
         return fieldsGroup
 
-    def __generateImage(self):
+    def __generateImage(self) -> None:
         self.image.fill("black")
-
         fieldsGroup = self.__getFieldsGroup()
         fieldsGroup.draw(self.image)
         
-    def update(self):
+    def update(self) -> None:
         self.__generateImage()
+
+        
+    def __CheckIfIsNotAFeldInstance(self, testObject:object) ->bool:
+        return type(testObject) != Feld
     
-    def handleClickEvent(self, pos:tuple[int, int]):
+    def handleClickEvent(self, pos:tuple[int, int])->None:
         if not(self.__running):
             return
         
         clickedField = self.getFieldByCords(pos)
-        if type(clickedField) != Feld:
+        if self.__CheckIfIsNotAFeldInstance(clickedField):
             return
         clickedFieldLabel = clickedField.getLabel()
 
@@ -169,33 +169,26 @@ class Brett(pygame.sprite.Sprite):
             self.__chooseFigureEvent(clickedField)
         elif self.__eventMode == "setFigure":
             self.__setFigureEvent(clickedField)
+
+    def __resetCursorAndSetEventMode(self, eventMode:str):
+        self.__cursor = None
+        self.__eventMode = eventMode
         
-    def __setFigureEvent(self, clickedField:Feld):
+    def __setFigureEvent(self, clickedField:Feld)->None:
         self.__clearAllFieldHighlights()
         if self.__chooseFigureEvent(clickedField):
             return
-        if type(self.__cursor) != Feld:
-            raise "Benötigt ein Cursor Feld"
+        if self.__CheckIfIsNotAFeldInstance(self.__cursor):
+            raise "Cursor muss ein Feld sein"
         
         clickedFigure = clickedField.getFigure()
         clickedFieldLabel = clickedField.getLabel()   
 
         if not(clickedField in self.getPossibleTurnFields(self.__cursor)):
-            self.__cursor = None
-            self.__eventMode = "chooseFigure"
+            self.__resetCursorAndSetEventMode("chooseFigure")
             self.__clearAllFieldHighlights()
             return
         
-        if clickedFigure !=None:
-            if clickedFigure.getTeam() == self.__onTurnTeam:
-                self.__eventMode = "chooseFigure"
-                self.__chooseFigureEvent(clickedField)
-                return
-            else:
-                print("Es wird wohl eine Figur geschlagen!")
-        
-
-
         beforeClickedFieldFigure = clickedField.getFigure()
         beforeCursorFigur = self.__cursor.getFigure()
 
@@ -208,10 +201,18 @@ class Brett(pygame.sprite.Sprite):
             clickedField.setFigure(beforeClickedFieldFigure)
             self.__cursor.setFigure(beforeCursorFigur)
 
-            self.__cursor = None
-            self.__eventMode = "chooseFigure"
+            self.__resetCursorAndSetEventMode("chooseFigure")
             self.__clearAllFieldHighlights()
             return
+        
+        if clickedFigure != None:
+            if clickedFigure.getTeam() == self.__onTurnTeam:
+                self.__eventMode = "chooseFigure"
+                self.__chooseFigureEvent(clickedField)
+                return
+            else:
+                print("Es wird eine Figur geschlagen!")
+
         self.__switchToOtherPlayer()
         self.__eventMode = "chooseFigure"
         self.__clearAllFieldHighlights()
@@ -219,29 +220,30 @@ class Brett(pygame.sprite.Sprite):
         
 
 
-    def __getCheckedTeam(self):
+    def __getCheckedTeam(self)->int|None:
         return None # muss noch ordentlich werden
 
-    def __switchToOtherPlayer(self):
+    def __switchToOtherPlayer(self)->None:
         self.__onTurnTeam = (self.__onTurnTeam+1)%2
 
-    def __chooseFigureEvent(self, clickedField:Feld):
-        clickedFigure = clickedField.getFigure()
-        clickedFieldLabel = clickedField.getLabel()
+    def __chooseFigureEvent(self, clickedField:Feld)->bool:
+        clickedFigure:None|Springer|Turm|Bauer|Laeufer|Dame = clickedField.getFigure()
+        clickedFieldLabel:str = clickedField.getLabel()
         if clickedFigure == None:
-            self.__clearAllFieldHighlights() # Sollte also eine Figur sein
+            self.__clearAllFieldHighlights() 
             return False
-        
+        # clickedFigure ist ab jetzt Aufjedenfall eine Figur
+
         if clickedFigure.getTeam() != self.__onTurnTeam:
             return False
-        
-        self.__markAllPosibleFields(clickedFigure, clickedFieldLabel)
+        # Es ist sichergestellt, dass mann nicht eine Figur vom Gegner verschieben wollte
+        self.__markAllPosibleFields(clickedFieldLabel)
         clickedField.addFieldHighlight("GreenOutlineBox")
-        self.__eventMode = "setFigure"
+        self.__eventMode:str = "setFigure"
         self.__cursor = clickedField
         return True
 
-    def __clearAllFieldHighlights(self):
+    def __clearAllFieldHighlights(self)->None:
         for key in self.__fields.keys():
             field = self.__fields[key]
             if type(field) != Feld:
@@ -260,69 +262,80 @@ class Brett(pygame.sprite.Sprite):
 
 
 
-    def __markAllPosibleFields(self, Figure, FigureFieldLabel):
+    def __markAllPosibleFields(self, FigureFieldLabel:str)->None:
         for field in self.getPossibleTurnFields(self.__fields[FigureFieldLabel]):
-            if type(field) != Feld:
-                continue
-            field.addFieldHighlight("SmallGreenMiddleCircle")
+            if type(field) == Feld:
+                field.addFieldHighlight("SmallGreenMiddleCircle")
+            
+    def __getOnlyPointsList(self,TurnsDatas:list[dict])->list[tuple]:
+        PointsList:list = []                           #
+        for TurnData in TurnsDatas:               #
+            PointsList.append(TurnData["point"])  # Zur Weiterverarbeitung sind nur noch die Relativen Punkte notwending 
+        return PointsList
 
-    def __getPossibleRelativeFields(self, field:Feld):
-        Figure = field.getFigure()
-        if Figure == None:
-            return []
-        canJump = Figure.getCanJump()
-        canKillMates = Figure.getCanKillMates()
-        relativeMaybePossibleTurnsDatas = Figure.getRelativeMaybePossibleTurns(field.getLabel())
-
-        relativeMaybePossibleTurnPoints = []                                                #
-        for relativeMaybePossibleTurnData in relativeMaybePossibleTurnsDatas:               #
-            relativeMaybePossibleTurnPoints.append(relativeMaybePossibleTurnData["point"])  # Zur Weiterverarbeitung sind nur noch die Relativen Punkte notwending 
-
-
-        possibleRelativeFields = []
-        for MaybeRelativeField in relativeMaybePossibleTurnPoints:
-            inspectionField = self.getRelativeField(field.getLabel(), MaybeRelativeField)
+    def __getOnlyRelativeFieldLinksOutOfList(self, relativePoints:list[tuple], baseFieldLabel:str)->list[tuple]:
+        relativeFieldLinks:list = []
+        for maybeFieldPoint in relativePoints:
+            inspectionField = self.getRelativeField(baseFieldLabel, maybeFieldPoint)
             if inspectionField == None:
                 continue           
-            possibleRelativeFields.append(MaybeRelativeField)
+            relativeFieldLinks.append(maybeFieldPoint)
+        return relativeFieldLinks
+    
+    def __getPossibleRelativeFields(self, startingPointField:Feld)->list:
+        Figure:None|Springer|Turm|Bauer|Laeufer|Dame = startingPointField.getFigure()
+        if Figure == None:
+            return []       # Ein Feld ohne Figur kann seine Figur nirgendwo hinsetzen
+        
+        startFieldLabel:str = startingPointField.getLabel()
+
+        canJump:bool = Figure.getCanJump()
+        canKillMates:bool = Figure.getCanKillMates()
+        relativeMaybePossibleTurnsDatas:dict = Figure.getRelativeMaybePossibleTurns(startFieldLabel)
+
+        relativeMaybePossibleTurnPoints:list[tuple] = self.__getOnlyPointsList(relativeMaybePossibleTurnsDatas)                 # Diese beinhalten eventuell noch Links zu nicht existenten Feldern
+        possibleRelativeFields:list[tuple] = self.__getOnlyRelativeFieldLinksOutOfList(relativeMaybePossibleTurnPoints, startFieldLabel)    # Löschen der Nicht existierenden Felder
 
         if not(canJump):
-            possibleRelativeFields = self.__doNotWalkThroughFigures(possibleRelativeFields, field)
+            possibleRelativeFields:list[tuple] = self.__doNotWalkThroughFigures(possibleRelativeFields, startingPointField)
         if not(canKillMates):
-            possibleRelativeFields = self.__removeKillOwnFiguresInRelatives(possibleRelativeFields, field)
+            possibleRelativeFields:list[tuple] = self.__removeKillOwnFiguresInRelatives(possibleRelativeFields, startingPointField)
 
-        relativeMaybePossibleTurnsDatas = self.__getBackTurnsDataByRelativeTurns(relativeMaybePossibleTurnsDatas, possibleRelativeFields)           # Zum Prüfen der Zug Bedingungen Notwendig
-        possibleRelativeFields = []
-        for relativeMaybePossibleTurnData in relativeMaybePossibleTurnsDatas:               
+        relativeMaybePossibleTurnsDatas:list[dict]|list = self.__getBackTurnsDataByRelativeTurns(relativeMaybePossibleTurnsDatas, possibleRelativeFields)           # Zum Prüfen der Zug Bedingungen ist es Notwendig wieder die anderen Informationen über den Zug zu haben als nur den Punkt
+        
+        possibleRelativeFields = []                                                                                             
+        for relativeMaybePossibleTurnData in relativeMaybePossibleTurnsDatas:                                                                        # Für jeden Punkt prüfen, welche der zusätzlichen Eigenschaften den Zuges erfüllt sein müssen um den Zug auszuführen und wenn diese nicht erfüllt ist ihn aussortieren
+            if type(relativeMaybePossibleTurnData) != dict:
+                raise "Unexpectet Type error in Brett: Line 309"
             if relativeMaybePossibleTurnData["onlyOnKill"] or not(relativeMaybePossibleTurnData["canKill"]):                                  
-                inspectIfKillField = self.getRelativeField(field.getLabel(), relativeMaybePossibleTurnData["point"])
-                if type(inspectIfKillField) != Feld:
+                inspectIfKillField = self.getRelativeField(startingPointField.getLabel(), relativeMaybePossibleTurnData["point"])
+                if self.__CheckIfIsNotAFeldInstance(inspectIfKillField):
                     continue
                 if inspectIfKillField.getFigure() == None and relativeMaybePossibleTurnData["onlyOnKill"]:
                     continue
                 if inspectIfKillField.getFigure() != None and not(relativeMaybePossibleTurnData["canKill"]):
                     continue
             possibleRelativeFields.append(relativeMaybePossibleTurnData["point"])  
-
-
-
         return possibleRelativeFields
     
-    def __getBackTurnsDataByRelativeTurns(self, relativePossibleTurnsDatas:list, points:list[tuple[int, int]])->list:
-        result = []
+    def __getBackTurnsDataByRelativeTurns(self, relativePossibleTurnsDatas:list[dict], points:list[tuple[int, int]])->list[dict]|list:
+        result:list = []
         for point in points:
-            result.append(self.__getBackTurnDataByRalativeTurn(relativePossibleTurnsDatas, point))
+            backTurnData = self.__getBackTurnDataByRalativeTurn(relativePossibleTurnsDatas, point)
+            if backTurnData == None:
+                raise "Could not find Turndata Back"
+            result.append(backTurnData)
         return result
 
-    def __getBackTurnDataByRalativeTurn(self, relativePossibleTurnsDatas, point):
+    def __getBackTurnDataByRalativeTurn(self, relativePossibleTurnsDatas:list[dict], point:tuple[int, int])->dict|None:
         for relativePossibleTurnData in relativePossibleTurnsDatas:
-            controlPoint = relativePossibleTurnData["point"]
+            controlPoint:tuple[int, int] = relativePossibleTurnData["point"]
             if controlPoint == point:
                 return relativePossibleTurnData
 
     
-    def __removeKillOwnFiguresInRelatives(self, RelativeFields:list[tuple], StartField:Feld)->list:
-        result = []
+    def __removeKillOwnFiguresInRelatives(self, RelativeFields:list[tuple], StartField:Feld)->list[tuple]|list:
+        result:list = []
         for RelativeField in RelativeFields:
             inspectField = self.getRelativeField(StartField.getLabel(), RelativeField)
             if type(inspectField) != Feld:
@@ -336,30 +349,30 @@ class Brett(pygame.sprite.Sprite):
         return result
         
 
-    def __doNotWalkThroughFigures(self, possibleRelativeFields:list[tuple], startField:Feld):
-        xLine = []
-        yLine = []
-        DiagonalXandY = []
-        DiagonalXdiffY = []
+    def __doNotWalkThroughFigures(self, possibleRelativeFields:list[tuple], startField:Feld)->list|list[tuple]:
+        xLine:list = []
+        yLine:list = []
+        DiagonalXandY:list = []
+        DiagonalXdiffY:list = []
         
-        unsortet = possibleRelativeFields.copy()
+        unsortet:list[tuple] = possibleRelativeFields.copy()
         for RelativeField in possibleRelativeFields:
-            # Vertikal (nur X ändert sich, Y = 0)
+            # Vertikal -> (nur X ändert sich, Y = 0)
             if RelativeField[1] == 0:
                 xLine.append(RelativeField)
                 unsortet.remove(RelativeField)
                 continue
-            # Horizontal (nur Y ändert sich, X = 0)
+            # Horizontal -> (nur Y ändert sich, X = 0)
             if RelativeField[0] == 0:
                 yLine.append(RelativeField)
                 unsortet.remove(RelativeField)
                 continue
-            # Diagonale: X und Y gleich
+            # Diagonale -> (X und Y gleich)
             if RelativeField[1] == RelativeField[0]:
                 DiagonalXandY.append(RelativeField)
                 unsortet.remove(RelativeField)
                 continue
-            # Diagonale: X und Y entgegengesetzt
+            # Diagonale -> (X und Y entgegengesetzt)
             if RelativeField[1] == -RelativeField[0]:
                 DiagonalXdiffY.append(RelativeField)
                 unsortet.remove(RelativeField)
@@ -368,11 +381,11 @@ class Brett(pygame.sprite.Sprite):
         if unsortet != []:
             raise "Nicht unterstütztes Bewegungsraster!"
         
-        xLines = self.__sortToDestination(xLine, 0)
-        yLines = self.__sortToDestination(yLine, 1)
-        DiagonalXandY = self.__sortToDestination(DiagonalXandY, 0)
-        DiagonalXdiffY = self.__sortToDestination(DiagonalXdiffY, 0)
-
+        xLines:list[tuple]|list = self.__sortToDestination(xLine, 0)
+        yLines:list[tuple]|list = self.__sortToDestination(yLine, 1)
+        DiagonalXandY:list[tuple]|list = self.__sortToDestination(DiagonalXandY, 0)
+        DiagonalXdiffY:list[tuple]|list = self.__sortToDestination(DiagonalXdiffY, 0)
+        # Jetzt sind alle Listen nach Richtungen Sortiert und in der richtigen reinfolge um jetzt von Vorne bis nach hinten zu prüfen, ob was im Weg steht um dahin zu laufen 
         resultFields = []
         for lines in [xLines, yLines, DiagonalXandY, DiagonalXdiffY]:
             for line in lines:
@@ -380,15 +393,15 @@ class Brett(pygame.sprite.Sprite):
                     resultFields.append(resultRelative)
         return resultFields
     
-    def __cutLineAtWalkingThroughFigures(self, Line:list, startField:Feld):
+    def __cutLineAtWalkingThroughFigures(self, Line:list[tuple], startField:Feld)->list[tuple]|list:
         '''
         Vor.: 'Line' ist nach zunehmenden Abstand sortiert und geht entweder Wagerecht oder Horizontal
         Eff.: -
         Erg.: Eine Liste die nur noch die relativen beinhaltet die von dem startFeld aus, wenn man die Linie von links nach rechts durchläuft nicht durch eine andere Figur läuft, sondern diese schlagen würde.
         '''
         resultLine = []
-        for relative in Line:
-            inspectField = self.getRelativeField(startField.getLabel(), relative)
+        for relative in Line: # Für jedes Feld in der Liste in der bereits richtigen Reignfolge durchgehen und zum ergebniss hinzufügen, wenn etwas im Weg stegt, dann stoppen
+            inspectField:Feld|None = self.getRelativeField(startField.getLabel(), relative)
             if type(inspectField) != Feld:
                 continue
             if inspectField.getFigure() != None:
@@ -402,13 +415,13 @@ class Brett(pygame.sprite.Sprite):
         Line = self.__SpitNegatives(Line, sortIndex)
         return self.__reverseFirstPart(Line)
     
-    def __reverseFirstPart(self, Line:list)->list:
+    def __reverseFirstPart(self, Line:list[list[tuple], list[tuple]])->list:
         firstPartLine = Line[0]
         if type(firstPartLine) == list:
             firstPartLine.reverse()
         return firstPartLine, Line[1]
     
-    def __SpitNegatives(self, Line:list[tuple], SplitNumberIndex)->list:
+    def __SpitNegatives(self, Line:list[tuple], SplitNumberIndex:int)->list[list[tuple], list[tuple]]:
         LinePositives = []
         LineNegatives = []
 
@@ -419,13 +432,12 @@ class Brett(pygame.sprite.Sprite):
             LinePositives.append(Element)
         return LineNegatives, LinePositives
 
-    def getRelativeField(self, fieldLabel:str, relativeField:tuple[int, int])->Feld:
-        startFieldX = ord(fieldLabel[0])
-        startFieldY = int(fieldLabel[1])
+    def getRelativeField(self, fieldLabel:str, relativeField:tuple[int, int])->Feld|None:
+        startFieldX:int = ord(fieldLabel[0])
+        startFieldY:int = int(fieldLabel[1])
         try:
-            targetFieldLabel = chr(startFieldX+relativeField[0])+str(startFieldY+relativeField[1])
-            targetField = self.__fields[targetFieldLabel]
-            
+            targetFieldLabel:str = chr(startFieldX+relativeField[0])+str(startFieldY+relativeField[1])
+            targetField:Feld|None = self.__fields[targetFieldLabel]
             if type(targetField) != Feld:
                 return None
             return targetField
@@ -434,9 +446,9 @@ class Brett(pygame.sprite.Sprite):
 
 
 
-    def getFieldByCords(self, pos:tuple[int, int])->Feld:
-        x = pos[0]-self.rect.topleft[0]
-        y = pos[1]-self.rect.topleft[1]
+    def getFieldByCords(self, pos:tuple[int, int])->Feld|None:
+        x:int = pos[0]-self.rect.topleft[0]
+        y:int = pos[1]-self.rect.topleft[1]
         if not(self.rect.collidepoint(pos)):
             return 
         
@@ -445,10 +457,8 @@ class Brett(pygame.sprite.Sprite):
             if type(field) != Feld:
                 continue 
 
-            field_rect = field.getRect()
-            if type(field_rect) != pygame.rect.Rect:
-                continue
-
+            field_rect:pygame.rect.Rect = field.getRect()
+            
             if field_rect.collidepoint(x, y):
                 return field
 

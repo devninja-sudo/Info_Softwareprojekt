@@ -14,7 +14,7 @@ class Springer(FigurDisplay):
 
 
 
-    def getRelativeMaybePossibleTurns(self, FieldLabel):
+    def getRelativeMaybePossibleTurns(self, FieldLabel:str)->dict:
         possibleZuege = []
         
         for i in [-1, 1]:

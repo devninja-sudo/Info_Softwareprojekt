@@ -9,7 +9,7 @@ class Laeufer(FigurDisplay):
 
 
 
-    def getRelativeMaybePossibleTurns(self, FieldLabel):
+    def getRelativeMaybePossibleTurns(self, FieldLabel:str)->dict:
         possibleZuege = []
         
         for i in range(1, 8):

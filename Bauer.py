@@ -9,7 +9,7 @@ class Bauer(FigurDisplay):
 
 
 
-    def getRelativeMaybePossibleTurns(self, FieldLabel):
+    def getRelativeMaybePossibleTurns(self, FieldLabel:str)->dict:
         possibleZuege = []
         if self.getTeam() == 0:
             direction = 1

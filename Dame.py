@@ -9,7 +9,7 @@ class Dame(FigurDisplay):
 
 
 
-    def getRelativeMaybePossibleTurns(self, FieldLabel):
+    def getRelativeMaybePossibleTurns(self, FieldLabel:str)->dict:
         possibleZuege = []
         for i in range(1, 8):
             for directionPoint in [(i, i), (-i, i), (-i, -i), (i, -i), (i, 0), (-i, 0), (0, i), (0, -i)]:
