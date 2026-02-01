@@ -1,29 +1,28 @@
 import pygame
 from sys import exit
-from FigurDisplay import FigurDisplay
+from FigurBuilder import FigurBuilder
 
-class Bauer(FigurDisplay):
-    def __init__(self, image:str, size:int, field_length:int, teamID:int, mustKill:bool=False):
-        super().__init__(image, size, field_length, teamID, False)
+class Bauer(FigurBuilder):
+    def __init__(self, image:str, size:int, field_length:int, field_count:int, fieldLabelStartLetter:str, teamID:int, mustKill:bool=False):
+        super().__init__(image, size, field_length, field_count, fieldLabelStartLetter, teamID, False)
         self.__mustKill = mustKill
 
 
 
-    def getRelativeMaybePossibleTurns(self, FieldLabel:str)->dict:
+    def getMaybePossibleTurns(self, originFieldLabel:str)->list[dict]:
         possibleZuege = []
         if self.getTeam() == 0:
             direction = 1
         else:
             direction = -1
+        possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, (0, 1*direction), self.__mustKill, False)
+        if int(originFieldLabel[1]) == 2 and direction == 1:
+            possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, (0, 2*direction), self.__mustKill, False)
+        elif int(originFieldLabel[1]) == 7 and direction == -1:
+            possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, (0, 2*direction), self.__mustKill, False)
 
-        possibleZuege = self.getNewZugListWithAdd(possibleZuege, (0, 1*direction), self.__mustKill, False)
-        if int(FieldLabel[1]) == 2 and direction == 1:
-            possibleZuege = self.getNewZugListWithAdd(possibleZuege, (0, 2*direction), self.__mustKill, False)
-        elif int(FieldLabel[1]) == 7 and direction == -1:
-            possibleZuege = self.getNewZugListWithAdd(possibleZuege, (0, 2*direction), self.__mustKill, False)
-
-        possibleZuege = self.getNewZugListWithAdd(possibleZuege, (1, 1*direction), True, True)
-        possibleZuege = self.getNewZugListWithAdd(possibleZuege, (-1, 1*direction), True, True)
+        possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, (1, 1*direction), True, True)
+        possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, (-1, 1*direction), True, True)
         
         return possibleZuege
 
@@ -39,7 +38,7 @@ if __name__ == "__main__":
     TestBauerGroup = pygame.sprite.GroupSingle()
     BauerDame = Bauer("assets/graphics/s_bauer.png", 80, 400, 1)
     TestBauerGroup.add(BauerDame)
-    print(BauerDame.getRelativeMaybePossibleTurns("a1"))
+    print(BauerDame.getMaybePossibleTurns("a1"))
     while True:
         screen.fill("white")
         for event in pygame.event.get():

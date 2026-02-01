@@ -4,7 +4,7 @@ from Feld import Feld
 from Springer import Springer
 from Turm import Turm
 from Laeufer import Laeufer
-from FigurDisplay import FigurDisplay
+from FigurBuilder import FigurBuilder
 from Dame import Dame
 from Bauer import Bauer
 
@@ -39,48 +39,46 @@ class Brett(pygame.sprite.Sprite):
 
 
 
-    def start(self):
+    def start(self)->None:
         if self.__running:
             raise "Bereits gestartet!"
         self.__running = True
         self.__eventMode = "chooseFigure"
 
-    def __setupBrett(self):
+    def __setupBrett(self)->None:
         #Wird später sauberer geschrieben !!!
         scale:float = 0.9
-        self.__fields["a8"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, 1))
-        self.__fields["h8"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, 1))
+        self.__fields["a8"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
+        self.__fields["h8"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
 
-        self.__fields["b8"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 1))
-        self.__fields["g8"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 1))
+        self.__fields["b8"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
+        self.__fields["g8"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
         
-        self.__fields["c8"].setFigure(Laeufer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 1))
-        self.__fields["f8"].setFigure(Laeufer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 1))
+        self.__fields["c8"].setFigure(Laeufer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
+        self.__fields["f8"].setFigure(Laeufer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
 
-        self.__fields["d8"].setFigure(Dame("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 1))
+        self.__fields["d8"].setFigure(Dame("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
 
         self.__buildPawnRow(7, scale, "assets/graphics/s_bauer.png", 1)
         self.__buildPawnRow(2, scale, "assets/graphics/s_bauer.png", 0)
 
-        self.__fields["a1"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, 0))
-        self.__fields["h1"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, 0))
+        self.__fields["a1"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
+        self.__fields["h1"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
 
-        self.__fields["b1"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 0))
-        self.__fields["g1"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 0))
+        self.__fields["b1"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
+        self.__fields["g1"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
         
-        self.__fields["c1"].setFigure(Laeufer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 0))
-        self.__fields["f1"].setFigure(Laeufer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 0))
+        self.__fields["c1"].setFigure(Laeufer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
+        self.__fields["f1"].setFigure(Laeufer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
 
-        self.__fields["d1"].setFigure(Dame("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, 0))
-
+        self.__fields["d1"].setFigure(Dame("assets/graphics/s_springer.png",self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
 
     def __buildPawnRow(self, RowNumber:int, scale:float, texturePath:str, teamID:int) -> None:
         for i in range(self.__fields_count):
             fieldLabelLetter:str = chr(ord(self.__field_label_start_letter)+i)
             fieldLabel:str = fieldLabelLetter + str(RowNumber)
             targetField:Feld = self.__fields[fieldLabel]
-            targetField.setFigure(Bauer(texturePath, self.__field_length*scale, self.__field_length, teamID))
-
+            targetField.setFigure(Bauer(texturePath, self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, teamID))
 
     def setRotation(self, rotation:int)->None:
         if rotation % 90 != 0:
@@ -115,7 +113,6 @@ class Brett(pygame.sprite.Sprite):
         lengthID = int(ord(field_name[0])-ord(self.__field_label_start_letter))
         spreadID = int(field_name[1])
 
-        
         x = self.__field_length*lengthID
         y = self.__field_length*(self.__fields_count-spreadID)
 
@@ -128,7 +125,6 @@ class Brett(pygame.sprite.Sprite):
             x, y = self.__rotatePoint90degree((x, y))
         return x, y
     
-
     def __rotatePoint90degree(self, point:tuple[int, int])->tuple[int, int]:
         return (self.__edge_length-point[1]-self.__field_length, point[0])
     
@@ -152,7 +148,6 @@ class Brett(pygame.sprite.Sprite):
     def update(self) -> None:
         self.__generateImage()
 
-        
     def __CheckIfIsNotAFeldInstance(self, testObject:object) ->bool:
         return type(testObject) != Feld
     
@@ -195,7 +190,6 @@ class Brett(pygame.sprite.Sprite):
         clickedField.setFigure(self.__cursor.getFigure())
         self.__cursor.setFigure(None)
 
-        
         if self.__getCheckedTeam() == self.__onTurnTeam:
             print("Zug nicht möglich (achte auf Schach)")
             clickedField.setFigure(beforeClickedFieldFigure)
@@ -217,9 +211,6 @@ class Brett(pygame.sprite.Sprite):
         self.__eventMode = "chooseFigure"
         self.__clearAllFieldHighlights()
         
-        
-
-
     def __getCheckedTeam(self)->int|None:
         return None # muss noch ordentlich werden
 
@@ -250,9 +241,9 @@ class Brett(pygame.sprite.Sprite):
                 continue
             field.clearFieldHighlights()
 
-    def getPossibleTurnFields(self, Field:Feld)->list[tuple]:
+    def getPossibleTurnFields(self, Field:Feld)->list[Feld]:        # Geht sicher, dass nicht doch irgendwie Ein Feld außerhalb des Brettes ist arbeitet noch Relative
         PossibleTurnFields = []
-        relativePossibleTurnFields = self.__getPossibleRelativeFields(Field)
+        relativePossibleTurnFields = self.__getPossibleRelativeFieldsFromFigurOnField(Field)
         for relativeField in relativePossibleTurnFields:
             field = self.getRelativeField(Field.getLabel(), relativeField)
             if type(field) != Feld:
@@ -272,43 +263,62 @@ class Brett(pygame.sprite.Sprite):
         for TurnData in TurnsDatas:               #
             PointsList.append(TurnData["point"])  # Zur Weiterverarbeitung sind nur noch die Relativen Punkte notwending 
         return PointsList
-
-    def __getOnlyRelativeFieldLinksOutOfList(self, relativePoints:list[tuple], baseFieldLabel:str)->list[tuple]:
-        relativeFieldLinks:list = []
-        for maybeFieldPoint in relativePoints:
-            inspectionField = self.getRelativeField(baseFieldLabel, maybeFieldPoint)
-            if inspectionField == None:
-                continue           
-            relativeFieldLinks.append(maybeFieldPoint)
-        return relativeFieldLinks
     
-    def __getPossibleRelativeFields(self, startingPointField:Feld)->list:
-        Figure:None|Springer|Turm|Bauer|Laeufer|Dame = startingPointField.getFigure()
-        if Figure == None:
+    def __getOnlyTurnDataWithValidFields(self, turnsData:list[dict])->list[dict]:
+        turnDataValidFields = []
+        for turnData in turnsData:
+            turnTargetFieldLabel = turnData["fieldLabel"]
+            if not(turnTargetFieldLabel in self.__fields.keys()):
+                continue
+
+            targetField = self.__fields[turnTargetFieldLabel]
+            if type(targetField) != Feld:
+                continue
+            turnDataValidFields.append(turnData)
+        return turnDataValidFields
+
+    def __getTurnsNotKillingMatesFromTurnData(self, turnsData:list[dict], TeamID:int)->list[dict]:
+        turnDataNotKillingMates = []
+        for turnData in turnsData:
+            turnTargetFieldLabel = turnData["fieldLabel"]
+            if not(turnTargetFieldLabel in self.__fields.keys()):       # Auf Nummer sicher gehen eig. nicht Notwendig! Kein Feld -> Kein Zug
+                continue                                                # Auf Nummer sicher gehen eig. nicht Notwendig! Kein Feld -> Kein Zug
+            targetField = self.__fields[turnTargetFieldLabel]           # Auf Nummer sicher gehen eig. nicht Notwendig! Kein Feld -> Kein Zug
+            if type(targetField) != Feld:                               # Auf Nummer sicher gehen eig. nicht Notwendig! Kein Feld -> Kein Zug
+                continue                                                # Auf Nummer sicher gehen eig. nicht Notwendig! Kein Feld -> Kein Zug
+            fieldFigure = targetField.getFigure()
+            if fieldFigure == None:                                     # Wenn keine Figur auf dem ZielFeld steht kann auch keine Rausgworfen werden, also ist das ok
+                turnDataNotKillingMates.append(turnData)                # Wenn keine Figur auf dem ZielFeld steht kann auch keine Rausgworfen werden, also ist das ok
+                continue                                                # Wenn keine Figur auf dem ZielFeld steht kann auch keine Rausgworfen werden, also ist das ok
+            if fieldFigure.getTeam() == TeamID:
+                continue
+            turnDataNotKillingMates.append(turnData)
+        return turnDataNotKillingMates
+
+    def __getPossibleRelativeFieldsFromFigurOnField(self, startingPointField:Feld)->list[tuple]:
+        figure:None|Springer|Turm|Bauer|Laeufer|Dame = startingPointField.getFigure()
+        if figure == None:
             return []       # Ein Feld ohne Figur kann seine Figur nirgendwo hinsetzen
         
         startFieldLabel:str = startingPointField.getLabel()
 
-        canJump:bool = Figure.getCanJump()
-        canKillMates:bool = Figure.getCanKillMates()
-        relativeMaybePossibleTurnsDatas:dict = Figure.getRelativeMaybePossibleTurns(startFieldLabel)
-
-        relativeMaybePossibleTurnPoints:list[tuple] = self.__getOnlyPointsList(relativeMaybePossibleTurnsDatas)                 # Diese beinhalten eventuell noch Links zu nicht existenten Feldern
-        possibleRelativeFields:list[tuple] = self.__getOnlyRelativeFieldLinksOutOfList(relativeMaybePossibleTurnPoints, startFieldLabel)    # Löschen der Nicht existierenden Felder
+        canJump:bool = figure.getCanJump()
+        canKillMates:bool = figure.getCanKillMates()
+        relativeMaybePossibleTurnsData:list[dict] = figure.getMaybePossibleTurns(startFieldLabel)                           # Diese sollten eig. nicht Links zu nicht existenten Feldern haben
+        relativeMaybePossibleTurnsData:list[dict] = self.__getOnlyTurnDataWithValidFields(relativeMaybePossibleTurnsData)   # Das ist jetzt trotzdem nochmal Sichergestellt, wer weiß oder so...
 
         if not(canJump):
-            possibleRelativeFields:list[tuple] = self.__doNotWalkThroughFigures(possibleRelativeFields, startingPointField)
+            relativeMaybePossibleTurnsData:list[dict] = self.__getTurnDataWithoutWalkThroughFigures(relativeMaybePossibleTurnsData, startingPointField)
         if not(canKillMates):
-            possibleRelativeFields:list[tuple] = self.__removeKillOwnFiguresInRelatives(possibleRelativeFields, startingPointField)
+            relativeMaybePossibleTurnsData:list[dict] = self.__getTurnsNotKillingMatesFromTurnData(relativeMaybePossibleTurnsData, figure.getTeam())
 
-        relativeMaybePossibleTurnsDatas:list[dict]|list = self.__getBackTurnsDataByRelativeTurns(relativeMaybePossibleTurnsDatas, possibleRelativeFields)           # Zum Prüfen der Zug Bedingungen ist es Notwendig wieder die anderen Informationen über den Zug zu haben als nur den Punkt
-        
+
         possibleRelativeFields = []                                                                                             
-        for relativeMaybePossibleTurnData in relativeMaybePossibleTurnsDatas:                                                                        # Für jeden Punkt prüfen, welche der zusätzlichen Eigenschaften den Zuges erfüllt sein müssen um den Zug auszuführen und wenn diese nicht erfüllt ist ihn aussortieren
+        for relativeMaybePossibleTurnData in relativeMaybePossibleTurnsData:                                                                        # Für jeden Punkt prüfen, welche der zusätzlichen Eigenschaften den Zuges erfüllt sein müssen um den Zug auszuführen und wenn diese nicht erfüllt ist ihn aussortieren
             if type(relativeMaybePossibleTurnData) != dict:
                 raise "Unexpectet Type error in Brett: Line 309"
-            if relativeMaybePossibleTurnData["onlyOnKill"] or not(relativeMaybePossibleTurnData["canKill"]):                                  
-                inspectIfKillField = self.getRelativeField(startingPointField.getLabel(), relativeMaybePossibleTurnData["point"])
+            if relativeMaybePossibleTurnData["onlyOnKill"] or not(relativeMaybePossibleTurnData["canKill"]):
+                inspectIfKillField = self.__fields[relativeMaybePossibleTurnData["fieldLabel"]]
                 if self.__CheckIfIsNotAFeldInstance(inspectIfKillField):
                     continue
                 if inspectIfKillField.getFigure() == None and relativeMaybePossibleTurnData["onlyOnKill"]:
@@ -332,24 +342,9 @@ class Brett(pygame.sprite.Sprite):
             controlPoint:tuple[int, int] = relativePossibleTurnData["point"]
             if controlPoint == point:
                 return relativePossibleTurnData
-
-    
-    def __removeKillOwnFiguresInRelatives(self, RelativeFields:list[tuple], StartField:Feld)->list[tuple]|list:
-        result:list = []
-        for RelativeField in RelativeFields:
-            inspectField = self.getRelativeField(StartField.getLabel(), RelativeField)
-            if type(inspectField) != Feld:
-                continue
-            if StartField.getFigure() == None or inspectField.getFigure() == None:
-                result.append(RelativeField)
-                continue
-            if StartField.getFigure().getTeam() == inspectField.getFigure().getTeam():
-                continue
-            result.append(RelativeField)
-        return result
-        
-
-    def __doNotWalkThroughFigures(self, possibleRelativeFields:list[tuple], startField:Feld)->list|list[tuple]:
+       
+    def __getTurnDataWithoutWalkThroughFigures(self, relativeMaybePossibleTurnsData:list[dict], startField:Feld)->list|list[dict]:
+        possibleRelativeFields:list[tuple] = self.__getOnlyPointsList(relativeMaybePossibleTurnsData)   
         xLine:list = []
         yLine:list = []
         DiagonalXandY:list = []
@@ -391,6 +386,8 @@ class Brett(pygame.sprite.Sprite):
             for line in lines:
                 for resultRelative in self.__cutLineAtWalkingThroughFigures(line, startField):
                     resultFields.append(resultRelative)
+
+        resultFields:list[dict]|list = self.__getBackTurnsDataByRelativeTurns(relativeMaybePossibleTurnsData, resultFields)
         return resultFields
     
     def __cutLineAtWalkingThroughFigures(self, Line:list[tuple], startField:Feld)->list[tuple]|list:

@@ -1,20 +1,20 @@
 import pygame
 from sys import exit
-from FigurDisplay import FigurDisplay
+from FigurBuilder import FigurBuilder
 
-class Turm(FigurDisplay):
-    def __init__(self, image:str, size:int, field_length:int, teamID:int):
-        super().__init__(image, size, field_length, teamID, False, False)
+class Turm(FigurBuilder):
+    def __init__(self, image:str, size:int, field_length:int, field_count:int, fieldLabelStartLetter:str, teamID:int, mustKill:bool=False):
+        super().__init__(image, size, field_length, field_count, fieldLabelStartLetter, teamID, False)
         self.__mustKill = False
 
 
 
-    def getRelativeMaybePossibleTurns(self, FieldLabel:str)->dict:
+    def getMaybePossibleTurns(self, originFieldLabel:str)->list[dict]:
         possibleZuege = []
         
         for i in range(1, 8):
                 for directionPoint in [(i, 0), (-i, 0), (0, i), (0, -i)]:
-                    possibleZuege = self.getNewZugListWithAdd(possibleZuege, directionPoint, self.__mustKill)
+                    possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, directionPoint, self.__mustKill)
         return possibleZuege
     
 
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     TestTurmGroup = pygame.sprite.GroupSingle()
     TestTurm = Turm("assets/graphics/s_turm.png", 80, 400, 1)
     TestTurmGroup.add(TestTurm)
-    print(TestTurm.getRelativeMaybePossibleTurns("a1"))
+    print(TestTurm.getMaybePossibleTurns("a1"))
     while True:
         screen.fill("white")
         for event in pygame.event.get():
