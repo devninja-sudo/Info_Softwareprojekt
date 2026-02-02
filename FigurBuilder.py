@@ -21,10 +21,17 @@ class FigurBuilder(pygame.sprite.Sprite):
 
         self.__canJump:bool = canJump
 
+        self.__hasKingRole:bool = False
+
+    def setKingRole(self, kingRole:bool)->None:
+        self.__hasKingRole = kingRole
+
+    def getKingRole(self)->bool:
+        return self.__hasKingRole
+    
     def getTeam(self)->int:
         return self.__team
 
-    
     def getCanJump(self)->bool:
         return self.__canJump
     
@@ -61,17 +68,22 @@ class FigurBuilder(pygame.sprite.Sprite):
             return None
         return targetFieldLabel
 
-    def getNewZugListWithAddingRelative(self, originFieldLabel:str, oldZugList:list, RelativePoint:tuple[int, int], onlyOnKill:bool, canKill:bool=True)->list[dict]:
-        newZug = {}
-        newZug["point"] = RelativePoint
+    def getNewZugListWithAddingRelative(self, originFieldLabel:str, oldZugList:list, RelativePoint:tuple[int, int], onlyOnKill:bool, canKill:bool=True, hasAnxiety:bool=False)->list[dict]:
+        newTurn = {}
+        newTurn["point"] = RelativePoint
         fieldLabel:str|None = self.__convertRelativePointToFieldLabel(originFieldLabel, RelativePoint)
         if fieldLabel == None:                          # Wenn der Zug außerhalb des Brettes gehen würde -> wird fieldLabel == None zu True
             return oldZugList
-        newZug["fieldLabel"] = fieldLabel
-        newZug["onlyOnKill"] = onlyOnKill
-        newZug["canKill"] = canKill
+        newTurn["fieldLabel"] = fieldLabel
+        newTurn["onlyOnKill"] = onlyOnKill
+        newTurn["canKill"] = canKill
+        
+        if self.__hasKingRole:
+            newTurn["hasAnxiety"] = True
+        else:
+            newTurn["hasAnxiety"] = hasAnxiety
 
-        oldZugList.append(newZug)
+        oldZugList.append(newTurn)
         return oldZugList
 
 if __name__ == "__main__":

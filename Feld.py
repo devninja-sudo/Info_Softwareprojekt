@@ -5,6 +5,7 @@ from Bauer import Bauer
 from Laeufer import Laeufer
 from Springer import Springer
 from Turm import Turm
+from Koenig import Koenig
 
 
 class Feld(pygame.sprite.Sprite):
@@ -56,14 +57,14 @@ class Feld(pygame.sprite.Sprite):
         return self.__FigurGroup
 
 
-    def setFigure(self, Figure:None|Springer|Turm|Bauer|Laeufer|Dame):
+    def setFigure(self, Figure:None|Springer|Turm|Bauer|Laeufer|Dame|Koenig):
         self.__FigurGroup.empty()
         self.__figure = Figure
         if Figure is not None:
             self.__FigurGroup.add(self.__figure)
         self.update()
 
-    def getFigure(self) -> None|Springer|Turm|Bauer|Laeufer|Dame:
+    def getFigure(self) -> None|Springer|Turm|Bauer|Laeufer|Dame|Koenig:
         return self.__figure
 
     def addFieldHighlight(self, HighlightType:str) -> None:
