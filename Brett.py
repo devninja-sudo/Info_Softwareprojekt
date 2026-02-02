@@ -414,34 +414,31 @@ class Brett(pygame.sprite.Sprite):
         for relativeMaybePossibleTurnData in relativeMaybePossibleTurnsData:                                                                        # Für jeden Punkt prüfen, welche der zusätzlichen Eigenschaften den Zuges erfüllt sein müssen um den Zug auszuführen und wenn diese nicht erfüllt ist ihn aussortieren
             if type(relativeMaybePossibleTurnData) != dict:
                 raise Exception("Unexpectet Type error in Brett: Line 309")
-            if relativeMaybePossibleTurnData["onlyOnKill"] or not(relativeMaybePossibleTurnData["canKill"]) or relativeMaybePossibleTurnData["hasAnxiety"]:
-                targetFieldOfTurn:Feld = self.__fields[relativeMaybePossibleTurnData["fieldLabel"]]
-                if self.__CheckIfIsNotAFeldInstance(targetFieldOfTurn):
+            targetFieldOfTurn:Feld = self.__fields[relativeMaybePossibleTurnData["fieldLabel"]]
+            if self.__CheckIfIsNotAFeldInstance(targetFieldOfTurn):
                     continue
-                if targetFieldOfTurn.getFigure() == None and relativeMaybePossibleTurnData["onlyOnKill"]:
-                    continue
-                if targetFieldOfTurn.getFigure() != None and not(relativeMaybePossibleTurnData["canKill"]):
-                    continue
-                if not(ignoreChecksOrAnxiety):
-                    if relativeMaybePossibleTurnData["hasAnxiety"]:
-                        if len(self.__getDangerFieldsWhenMove(targetFieldOfTurn, startingPointField)) != 0:
-                            continue
-                if not(ignoreBuildingChecks):
-                    targetFigure = targetFieldOfTurn.getFigure()
-                    StartFeldLink = self.__fields[startingPointField.getLabel()]
-                    if type(StartFeldLink) == Feld:
-                        skip = False
-                        StartFeldLink.setFigure(None)
-                        targetFieldOfTurn.setFigure(startFigure)
-                        if startFigure.getTeam() in self.__getCheckedTeams():
-                            skip = True
-                        targetFieldOfTurn.setFigure(targetFigure)
-                        StartFeldLink.setFigure(startFigure)
-                        if skip:
-                            continue
-
-                
-
+            #if relativeMaybePossibleTurnData["onlyOnKill"] or not(relativeMaybePossibleTurnData["canKill"]) or relativeMaybePossibleTurnData["hasAnxiety"]:
+            if targetFieldOfTurn.getFigure() == None and relativeMaybePossibleTurnData["onlyOnKill"]:
+                continue
+            if targetFieldOfTurn.getFigure() != None and not(relativeMaybePossibleTurnData["canKill"]):
+                continue
+            if not(ignoreChecksOrAnxiety):
+                if relativeMaybePossibleTurnData["hasAnxiety"]:
+                    if len(self.__getDangerFieldsWhenMove(targetFieldOfTurn, startingPointField)) != 0:
+                        continue
+            if not(ignoreBuildingChecks):
+                targetFigure = targetFieldOfTurn.getFigure()
+                StartFeldLink = self.__fields[startingPointField.getLabel()]
+                if type(StartFeldLink) == Feld:
+                    skip = False
+                    StartFeldLink.setFigure(None)
+                    targetFieldOfTurn.setFigure(startFigure)
+                    if startFigure.getTeam() in self.__getCheckedTeams():
+                        skip = True
+                    targetFieldOfTurn.setFigure(targetFigure)
+                    StartFeldLink.setFigure(startFigure)
+                    if skip:
+                        continue
             possibleRelativeFields.append(relativeMaybePossibleTurnData["point"])  
         return possibleRelativeFields
     
