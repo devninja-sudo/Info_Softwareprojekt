@@ -293,7 +293,7 @@ class Brett(pygame.sprite.Sprite):
             if not(figureOnField.getCanKillMates()) and figureOnField.getTeam() == FigureTeam:
                 continue
 
-            if testForField in self.getPossibleTurnFields(field, True):
+            if testForField in self.getPossibleTurnFields(field, True, True):
                 resultingDangerFields.append(field)
         return resultingDangerFields
 
@@ -338,9 +338,9 @@ class Brett(pygame.sprite.Sprite):
                 continue
             field.clearFieldHighlights()
 
-    def getPossibleTurnFields(self, Field:Feld, ignoreChecksOrAnxiety:bool=False)->list[Feld]:        # Geht sicher, dass nicht doch irgendwie Ein Feld außerhalb des Brettes ist arbeitet noch Relative
+    def getPossibleTurnFields(self, Field:Feld, ignoreChecksOrAnxiety:bool=False, ignoreBuildingChecks:bool=False)->list[Feld]:        # Geht sicher, dass nicht doch irgendwie Ein Feld außerhalb des Brettes ist arbeitet noch Relative
         PossibleTurnFields = []
-        relativePossibleTurnFields = self.__getPossibleRelativeFieldsFromFigurOnField(Field, ignoreChecksOrAnxiety)
+        relativePossibleTurnFields = self.__getPossibleRelativeFieldsFromFigurOnField(Field, ignoreChecksOrAnxiety, ignoreBuildingChecks)
         for relativeField in relativePossibleTurnFields:
             field = self.getRelativeField(Field.getLabel(), relativeField)
             if type(field) != Feld:
@@ -392,22 +392,22 @@ class Brett(pygame.sprite.Sprite):
             turnDataNotKillingMates.append(turnData)
         return turnDataNotKillingMates
 
-    def __getPossibleRelativeFieldsFromFigurOnField(self, startingPointField:Feld, ignoreChecksOrAnxiety:bool=False)->list[tuple]:
-        figure:None|Springer|Turm|Bauer|Laeufer|Dame|Koenig = startingPointField.getFigure()
-        if figure == None:
+    def __getPossibleRelativeFieldsFromFigurOnField(self, startingPointField:Feld, ignoreChecksOrAnxiety:bool=False, ignoreBuildingChecks:bool=False)->list[tuple]:
+        startFigure:None|Springer|Turm|Bauer|Laeufer|Dame|Koenig = startingPointField.getFigure()
+        if startFigure == None:
             return []       # Ein Feld ohne Figur kann seine Figur nirgendwo hinsetzen
         
         startFieldLabel:str = startingPointField.getLabel()
 
-        canJump:bool = figure.getCanJump()
-        canKillMates:bool = figure.getCanKillMates()
-        relativeMaybePossibleTurnsData:list[dict] = figure.getMaybePossibleTurns(startFieldLabel)                           # Diese sollten eig. nicht Links zu nicht existenten Feldern haben
+        canJump:bool = startFigure.getCanJump()
+        canKillMates:bool = startFigure.getCanKillMates()
+        relativeMaybePossibleTurnsData:list[dict] = startFigure.getMaybePossibleTurns(startFieldLabel)                           # Diese sollten eig. nicht Links zu nicht existenten Feldern haben
         relativeMaybePossibleTurnsData:list[dict] = self.__getOnlyTurnDataWithValidFields(relativeMaybePossibleTurnsData)   # Das ist jetzt trotzdem nochmal Sichergestellt, wer weiß oder so...
 
         if not(canJump):
             relativeMaybePossibleTurnsData:list[dict] = self.__getTurnDataWithoutWalkThroughFigures(relativeMaybePossibleTurnsData, startingPointField)
         if not(canKillMates):
-            relativeMaybePossibleTurnsData:list[dict] = self.__getTurnsNotKillingMatesFromTurnData(relativeMaybePossibleTurnsData, figure.getTeam())
+            relativeMaybePossibleTurnsData:list[dict] = self.__getTurnsNotKillingMatesFromTurnData(relativeMaybePossibleTurnsData, startFigure.getTeam())
 
 
         possibleRelativeFields = []                                                                                             
@@ -426,6 +426,22 @@ class Brett(pygame.sprite.Sprite):
                     if relativeMaybePossibleTurnData["hasAnxiety"]:
                         if len(self.__getDangerFieldsWhenMove(targetFieldOfTurn, startingPointField)) != 0:
                             continue
+                if not(ignoreBuildingChecks):
+                    targetFigure = targetFieldOfTurn.getFigure()
+                    StartFeldLink = self.__fields[startingPointField.getLabel()]
+                    if type(StartFeldLink) == Feld:
+                        skip = False
+                        StartFeldLink.setFigure(None)
+                        targetFieldOfTurn.setFigure(startFigure)
+                        if startFigure.getTeam() in self.__getCheckedTeams():
+                            skip = True
+                        targetFieldOfTurn.setFigure(targetFigure)
+                        StartFeldLink.setFigure(startFigure)
+                        if skip:
+                            continue
+
+                
+
             possibleRelativeFields.append(relativeMaybePossibleTurnData["point"])  
         return possibleRelativeFields
     
