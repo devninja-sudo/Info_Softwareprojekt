@@ -23,6 +23,9 @@ class FigurBuilder(pygame.sprite.Sprite):
 
         self.__hasKingRole:bool = False
 
+
+        self.__movedAmount:int = 0
+
     def setKingRole(self, kingRole:bool)->None:
         self.__hasKingRole = kingRole
 
@@ -31,7 +34,19 @@ class FigurBuilder(pygame.sprite.Sprite):
     
     def getTeam(self)->int:
         return self.__team
+    
+    def moved(self):
+        self.__movedAmount +=1
+    
+    def undoMovedCounterbyOne(self):
+        self.__movedAmount -=1
 
+    def getHasMoved(self)->bool:
+        return self.__movedAmount != 0
+    
+    def getMovedAmount(self)->int:
+        return self.__movedAmount
+    
     def getCanJump(self)->bool:
         return self.__canJump
     
@@ -54,7 +69,7 @@ class FigurBuilder(pygame.sprite.Sprite):
         return lowestLetterID <= testFieldlabelLetterID <= maxLetterID and lowestNumber <= testFieldlabelNumberID <= self.__field_count
 
 
-    def __convertRelativePointToFieldLabel(self, originFieldLabel:str, RelativePoint:tuple[int, int])->str|None:
+    def convertRelativePointToFieldLabel(self, originFieldLabel:str, RelativePoint:tuple[int, int])->str|None:
         targetFieldLabel:str = ""
         originLetterID:int = ord(originFieldLabel[0])
         originNumberID:int = int(originFieldLabel[1:])
@@ -67,11 +82,11 @@ class FigurBuilder(pygame.sprite.Sprite):
         if not(self.__getIsFieldLabelValid(targetFieldLabel)):
             return None
         return targetFieldLabel
-
-    def getNewZugListWithAddingRelative(self, originFieldLabel:str, oldZugList:list, RelativePoint:tuple[int, int], onlyOnKill:bool, canKill:bool=True, hasAnxiety:bool=False)->list[dict]:
+    
+    def getNewZugListWithAddingRelative(self, originFieldLabel:str, oldZugList:list, RelativePoint:tuple[int, int], onlyOnKill:bool, canKill:bool=True, hasAnxiety:bool=False, specialMoveLabel:str|None = None, needFigureOnField:str|None = None, needFigureType:type|None = None,  allowNeededFigureHasTurned:bool|None = None, endPointNeededFigure:str|None = None)->list[dict]:
         newTurn = {}
         newTurn["point"] = RelativePoint
-        fieldLabel:str|None = self.__convertRelativePointToFieldLabel(originFieldLabel, RelativePoint)
+        fieldLabel:str|None = self.convertRelativePointToFieldLabel(originFieldLabel, RelativePoint)
         if fieldLabel == None:                          # Wenn der Zug außerhalb des Brettes gehen würde -> wird fieldLabel == None zu True
             return oldZugList
         newTurn["fieldLabel"] = fieldLabel
@@ -82,6 +97,14 @@ class FigurBuilder(pygame.sprite.Sprite):
             newTurn["hasAnxiety"] = True
         else:
             newTurn["hasAnxiety"] = hasAnxiety
+
+        newTurn["specialTurnType"] = specialMoveLabel
+        newTurn["needFigureOnField"] = needFigureOnField
+        newTurn["neededFigureType"] = needFigureType
+        newTurn["allowNeededFigureHasTurned"] = allowNeededFigureHasTurned
+        newTurn["endPointNeededFigure"] = endPointNeededFigure
+        
+        
 
         oldZugList.append(newTurn)
         return oldZugList

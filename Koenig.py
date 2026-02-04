@@ -1,7 +1,7 @@
 import pygame
 from sys import exit
 from FigurBuilder import FigurBuilder
-
+from Turm import Turm
 class Koenig(FigurBuilder):
     def __init__(self, image:str, size:int, field_length:int, field_count:int, fieldLabelStartLetter:str, teamID:int, mustKill:bool=False):
         super().__init__(image, size, field_length, field_count, fieldLabelStartLetter, teamID, True)
@@ -12,7 +12,6 @@ class Koenig(FigurBuilder):
 
         self.__hasAnxiety:bool = True
         self.setKingRole(True)
-        self.__hasMoved:bool = False
         
 
 
@@ -23,10 +22,12 @@ class Koenig(FigurBuilder):
                 if i == 0 and j == 0:
                     continue
                 possibleTurns = self.getNewZugListWithAddingRelative(originFieldLabel, possibleTurns, (i, j), self.__mustKill, self.__canKill, self.__hasAnxiety)
+        if not(self.getHasMoved()):
+            possibleTurns = self.getNewZugListWithAddingRelative(originFieldLabel, possibleTurns, (2, 0), False, False, True, "castling", self.convertRelativePointToFieldLabel(originFieldLabel, (3, 0)), Turm, False, self.convertRelativePointToFieldLabel(originFieldLabel, (1, 0)))
+            possibleTurns = self.getNewZugListWithAddingRelative(originFieldLabel, possibleTurns, (-3, 0), False, False, True, "castling", self.convertRelativePointToFieldLabel(originFieldLabel, (-4, 0)), Turm, False, self.convertRelativePointToFieldLabel(originFieldLabel, (-2, 0)))
         return possibleTurns
-    
-    def Moved(self):
-        self.__hasMoved = True
+
+
 
 
 if __name__ == "__main__":

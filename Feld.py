@@ -13,7 +13,7 @@ class Feld(pygame.sprite.Sprite):
         super().__init__()
 
         self.color:str = color
-        self.__figure:None|Springer|Turm|Bauer|Laeufer|Dame = None
+        self.__figure:None|Springer|Turm|Bauer|Laeufer|Dame|Koenig = None
         self.__size:tuple[int, int] = size
         self.__label:str = label
 

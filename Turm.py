@@ -16,7 +16,6 @@ class Turm(FigurBuilder):
                 for directionPoint in [(i, 0), (-i, 0), (0, i), (0, -i)]:
                     possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, directionPoint, self.__mustKill)
         return possibleZuege
-    
 
 if __name__ == "__main__":
     pygame.init()
