@@ -218,10 +218,21 @@ class Brett(pygame.sprite.Sprite):
                     needFigureField:Feld = self.__fields[matchingTurnData["needFigureOnField"]]
                     targetFigureField:Feld = self.__fields[matchingTurnData["endPointNeededFigure"]]
                 except KeyError:
-                    print("Oh, that should't happen. You need to restart the game. ERROR: MAJOR ERROR in Function Brett.__setFigureEvent")
+                    print("Oh, that should't happen. You need to restart the game. ERROR: MAJOR ERROR in Function Brett.__setFigureEvent - endPointNeededFigure/needFigureOnField")
                     return
                 targetFigureField.setFigure(needFigureField.getFigure())
                 needFigureField.setFigure(None)
+
+        if matchingTurnData["onDoneTurnCall"] != None:
+            matchingTurnData["onDoneTurnCall"](self.__turnNumber)
+
+        if matchingTurnData["killMaybeFigureField"] != None:
+            try:
+                killMaybeFigureField:Feld = self.__fields[matchingTurnData["killMaybeFigureField"]]
+            except KeyError:
+                print("Oh, that should't happen. You need to restart the game. ERROR: MAJOR ERROR in Function Brett.__setFigureEvent - killMaybeFigureField")
+                return
+            killMaybeFigureField.setFigure(None)
 
         clickedField.setFigure(beforeCursorFigur)
         self.__cursor.setFigure(None)
@@ -251,6 +262,30 @@ class Brett(pygame.sprite.Sprite):
         self.__switchToOtherPlayer()
         self.__eventMode = "chooseFigure"
         self.__clearAllFieldHighlights()
+        self.checkIfMate()
+    
+    def checkIfMate(self)->list[int]:
+        checkedTeams = self.__getCheckedTeams()
+        if len(checkedTeams) == 0:
+            return [-1]
+        matedTeams = []
+        for team in checkedTeams:
+            isMate = True
+            for field in self.__fields:
+                if type(field) != Feld:
+                    continue
+                fieldFigure = field.getFigure()
+                if fieldFigure.getTeam() == team:
+                    if len(self.getPossibleTurnFields(field)) != 0:
+                        isMate = False
+                        break
+            if isMate:
+                matedTeams.append(team)
+        if len(matedTeams) == 0:
+            return [-1]
+        for team in matedTeams:
+            print("MATT: ", team)
+        return matedTeams
     
     def __getKingFieldsInDanger(self)->list[Feld]:
         KingFields:list[Feld] = self.__getFieldsWithKings()
@@ -471,7 +506,20 @@ class Brett(pygame.sprite.Sprite):
 
 
             if targetFieldOfTurn.getFigure() == None and relativeMaybePossibleTurnData["onlyOnKill"]:
-                continue
+                if relativeMaybePossibleTurnData["killMaybeFigureField"] == None:
+                    continue
+                try:
+                    killMaybeFigureField:Feld = self.__fields[relativeMaybePossibleTurnData["killMaybeFigureField"]]
+                except KeyError:
+                    # Wenn die Erwartete Figur auf einem Feld stehen soll, welches nicht existiert, ist davon auszugen das da keine steht, also kann der Zug nicht gemacht werden -> continue damit er nicht als zugmöglichkeit hinzugefügt wird.
+                    raise Exception("Killmaybefigure Field couldn't be found!")
+                killMaybeFigureFieldFigure = killMaybeFigureField.getFigure()
+                if killMaybeFigureFieldFigure == None:
+                    continue
+                if relativeMaybePossibleTurnData["killMaybeFigureType"] != None and relativeMaybePossibleTurnData["killMaybeFigureType"] != type(killMaybeFigureFieldFigure):
+                    continue
+                if relativeMaybePossibleTurnData["killMaybeFigureMustHadDoubleWalkLastTurn"] and not(killMaybeFigureFieldFigure.hasDidDoubleWalkInTurn(self.__turnNumber-1)):
+                    continue
 
             if targetFieldOfTurn.getFigure() != None and not(relativeMaybePossibleTurnData["canKill"]):
                 continue

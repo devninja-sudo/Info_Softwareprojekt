@@ -1,6 +1,6 @@
 import pygame
 from sys import exit
-
+from typing import Callable
 
 class FigurBuilder(pygame.sprite.Sprite):
     def __init__(self, image:str, size:int, field_length:int, field_count:int, fieldLabelStartLetter:str, teamID:int, canJump:bool, KillMates:bool=False):
@@ -83,7 +83,7 @@ class FigurBuilder(pygame.sprite.Sprite):
             return None
         return targetFieldLabel
     
-    def getNewZugListWithAddingRelative(self, originFieldLabel:str, oldZugList:list, RelativePoint:tuple[int, int], onlyOnKill:bool, canKill:bool=True, hasAnxiety:bool=False, specialMoveLabel:str|None = None, needFigureOnField:str|None = None, needFigureType:type|None = None,  allowNeededFigureHasTurned:bool|None = None, endPointNeededFigure:str|None = None)->list[dict]:
+    def getNewZugListWithAddingRelative(self, originFieldLabel:str, oldZugList:list, RelativePoint:tuple[int, int], onlyOnKill:bool, canKill:bool=True, hasAnxiety:bool=False, specialMoveLabel:str|None = None, needFigureOnField:str|None = None, needFigureType:type|None = None,  allowNeededFigureHasTurned:bool|None = None, endPointNeededFigure:str|None = None, onDoneTurnCall:Callable|None=None, killMaybeFigureType:type|None=None, killMaybeFigureField:str|None=None, killMaybeFigureMustHadDoubleWalkLastTurn:bool=False)->list[dict]:
         newTurn = {}
         newTurn["point"] = RelativePoint
         fieldLabel:str|None = self.convertRelativePointToFieldLabel(originFieldLabel, RelativePoint)
@@ -92,7 +92,10 @@ class FigurBuilder(pygame.sprite.Sprite):
         newTurn["fieldLabel"] = fieldLabel
         newTurn["onlyOnKill"] = onlyOnKill
         newTurn["canKill"] = canKill
-        
+        newTurn["killMaybeFigureType"] = killMaybeFigureType
+        newTurn["killMaybeFigureField"] = killMaybeFigureField
+        newTurn["killMaybeFigureMustHadDoubleWalkLastTurn"] = killMaybeFigureMustHadDoubleWalkLastTurn
+
         if self.__hasKingRole:
             newTurn["hasAnxiety"] = True
         else:
@@ -100,11 +103,12 @@ class FigurBuilder(pygame.sprite.Sprite):
 
         newTurn["specialTurnType"] = specialMoveLabel
         newTurn["needFigureOnField"] = needFigureOnField
+        
         newTurn["neededFigureType"] = needFigureType
         newTurn["allowNeededFigureHasTurned"] = allowNeededFigureHasTurned
         newTurn["endPointNeededFigure"] = endPointNeededFigure
         
-        
+        newTurn["onDoneTurnCall"] = onDoneTurnCall
 
         oldZugList.append(newTurn)
         return oldZugList
