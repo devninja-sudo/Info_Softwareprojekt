@@ -1,36 +1,43 @@
 import pygame
 from sys import exit
+from Dame import Dame
+from Bauer import Bauer
+from Laeufer import Laeufer
+from Springer import Springer
+from Turm import Turm
+from Koenig import Koenig
+
 
 class Feld(pygame.sprite.Sprite):
     def __init__(self, size:tuple[int, int], topLeftCorner:tuple[int, int], color:str, label:str="undefined"):
         super().__init__()
 
-        self.color = color
-        self.__figure = None
-        self.__size = size
-        self.__label = label
+        self.color:str = color
+        self.__figure:None|Springer|Turm|Bauer|Laeufer|Dame|Koenig = None
+        self.__size:tuple[int, int] = size
+        self.__label:str = label
 
-        self.image = pygame.surface.Surface(self.__size)
-        self.rect = self.image.get_rect(topleft = topLeftCorner)
+        self.image:pygame.Surface = pygame.surface.Surface(self.__size)
+        self.rect:pygame.Rect = self.image.get_rect(topleft = topLeftCorner)
 
-        self.__effects = []
-        self.__effectKeyHighlight = "Highlight"
-        self.__FigurGroup = pygame.sprite.GroupSingle()
+        self.__effects:list = []
+        self.__effectKeyHighlight:str = "Highlight"
+        self.__FigurGroup:pygame.sprite.Group = pygame.sprite.GroupSingle()
 
         self.update()
 
-    def getLabel(self):
+    def getLabel(self)->str:
         return self.__label
 
-    def setFieldPosition(self, topLeftCorner:tuple[int, int]):
+    def setFieldPosition(self, topLeftCorner:tuple[int, int])->None:
         self.rect.topleft = topLeftCorner
 
-    def update(self):
-        self.__generateFieldSurface()
+    def update(self)->None:
+        self.__drawFieldSurface()
         self.__FigurGroup.draw(self.image)
         
 
-    def __generateFieldSurface(self):
+    def __drawFieldSurface(self)->None:
         self.image.fill(self.color)
         for effect in self.__effects:
             if effect[0] == self.__effectKeyHighlight:
@@ -50,28 +57,28 @@ class Feld(pygame.sprite.Sprite):
         return self.__FigurGroup
 
 
-    def setFigure(self, Figure):
+    def setFigure(self, Figure:None|Springer|Turm|Bauer|Laeufer|Dame|Koenig):
         self.__FigurGroup.empty()
         self.__figure = Figure
         if Figure is not None:
             self.__FigurGroup.add(self.__figure)
         self.update()
 
-    def getFigure(self):
+    def getFigure(self) -> None|Springer|Turm|Bauer|Laeufer|Dame|Koenig:
         return self.__figure
 
-    def addFieldHighlight(self, HighlightType:str):
+    def addFieldHighlight(self, HighlightType:str) -> None:
         self.__effects.append([self.__effectKeyHighlight, HighlightType])
         self.update()
     
-    def clearFieldHighlights(self):
+    def clearFieldHighlights(self) -> None:
         for effect in self.__effects:
             if effect[0] == self.__effectKeyHighlight:
                 self.__effects.remove(effect)
         self.update()
             
 
-    def removeFieldHighlight(self, HighlightType:str):
+    def removeFieldHighlight(self, HighlightType:str) -> None:
         self.__effects.remove([self.__effectKeyHighlight, HighlightType])
         self.update()
 
