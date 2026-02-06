@@ -60,7 +60,6 @@ class Brett(pygame.sprite.Sprite):
         self.__fields["c8"].setFigure(Laeufer("assets/graphics/s_laeufer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
         self.__fields["f8"].setFigure(Laeufer("assets/graphics/s_laeufer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
 
-        
         self.__fields["d8"].setFigure(Dame("assets/graphics/s_dame.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
         self.__fields["e8"].setFigure(Koenig("assets/graphics/s_koenig.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
 
@@ -546,69 +545,67 @@ class Brett(pygame.sprite.Sprite):
         return True
 
     
-    def __getBackTurnsDataByRelativeTurns(self, relativePossibleTurnsDatas:list[dict], points:list[tuple[int, int]])->list[dict]|list:
-        result:list = []
-        for point in points:
-            backTurnData = self.__getBackTurnDataByRalativeTurn(relativePossibleTurnsDatas, point)
-            if backTurnData == None:
-                raise Exception("Could not find Turndata Back")
-            result.append(backTurnData)
-        return result
+    #def __getBackTurnsDataByRelativeTurns(self, relativePossibleTurnsDatas:list[dict], points:list[tuple[int, int]])->list[dict]|list:
+    #    result:list = []
+    #    for point in points:
+    #        backTurnData = self.__getBackTurnDataByRalativeTurn(relativePossibleTurnsDatas, point)
+    #        if backTurnData == None:
+    #            raise Exception("Could not find Turndata Back")
+    #        result.append(backTurnData)
+    #    return result
 
-    def __getBackTurnDataByRalativeTurn(self, relativePossibleTurnsDatas:list[dict], point:tuple[int, int])->dict|None:
-        for relativePossibleTurnData in relativePossibleTurnsDatas:
-            controlPoint:tuple[int, int] = relativePossibleTurnData["point"]
-            if controlPoint == point:
-                return relativePossibleTurnData
+    #def __getBackTurnDataByRalativeTurn(self, relativePossibleTurnsDatas:list[dict], point:tuple[int, int])->dict|None:
+    #    for relativePossibleTurnData in relativePossibleTurnsDatas:
+    #        controlPoint:tuple[int, int] = relativePossibleTurnData["point"]
+    #        if controlPoint == point:
+    #            return relativePossibleTurnData
        
     def __getTurnDataWithoutWalkThroughFigures(self, relativeMaybePossibleTurnsData:list[dict], startField:Feld)->list|list[dict]:
-        possibleRelativeFields:list[tuple] = self.__getOnlyPointsList(relativeMaybePossibleTurnsData)   
         xLine:list = []
         yLine:list = []
         DiagonalXandY:list = []
         DiagonalXdiffY:list = []
         
-        unsortet:list[tuple] = possibleRelativeFields.copy()
-        for RelativeField in possibleRelativeFields:
+        unsortet:list[tuple] = relativeMaybePossibleTurnsData.copy()
+        for TurnData in relativeMaybePossibleTurnsData:
             # Vertikal -> (nur X ändert sich, Y = 0)
-            if RelativeField[1] == 0:
-                xLine.append(RelativeField)
-                unsortet.remove(RelativeField)
+            if TurnData["point"][1] == 0:
+                xLine.append(TurnData)
+                unsortet.remove(TurnData)
                 continue
             # Horizontal -> (nur Y ändert sich, X = 0)
-            if RelativeField[0] == 0:
-                yLine.append(RelativeField)
-                unsortet.remove(RelativeField)
+            if TurnData["point"][0] == 0:
+                yLine.append(TurnData)
+                unsortet.remove(TurnData)
                 continue
             # Diagonale -> (X und Y gleich)
-            if RelativeField[1] == RelativeField[0]:
-                DiagonalXandY.append(RelativeField)
-                unsortet.remove(RelativeField)
+            if TurnData["point"][1] == TurnData["point"][0]:
+                DiagonalXandY.append(TurnData)
+                unsortet.remove(TurnData)
                 continue
             # Diagonale -> (X und Y entgegengesetzt)
-            if RelativeField[1] == -RelativeField[0]:
-                DiagonalXdiffY.append(RelativeField)
-                unsortet.remove(RelativeField)
+            if TurnData["point"][1] == -TurnData["point"][0]:
+                DiagonalXdiffY.append(TurnData)
+                unsortet.remove(TurnData)
                 continue
         
         if unsortet != []:
             raise Exception("Nicht unterstütztes Bewegungsraster, wenn canJump = False!")
         
-        xLines:list[tuple]|list = self.__sortToDestination(xLine, 0)
-        yLines:list[tuple]|list = self.__sortToDestination(yLine, 1)
-        DiagonalXandY:list[tuple]|list = self.__sortToDestination(DiagonalXandY, 0)
-        DiagonalXdiffY:list[tuple]|list = self.__sortToDestination(DiagonalXdiffY, 0)
+        xLines:list[list[dict]]|list = self.__sortToDestination(xLine, 0)
+        yLines:list[list[dict]]|list = self.__sortToDestination(yLine, 1)
+        DiagonalXandY:list[list[dict]]|list = self.__sortToDestination(DiagonalXandY, 0)
+        DiagonalXdiffY:list[list[dict]]|list = self.__sortToDestination(DiagonalXdiffY, 0)
         # Jetzt sind alle Listen nach Richtungen Sortiert und in der richtigen reinfolge um jetzt von Vorne bis nach hinten zu prüfen, ob was im Weg steht um dahin zu laufen 
-        resultFields:list[tuple[int, int]] = []
+        resultFields:list[dict] = []
         for lines in [xLines, yLines, DiagonalXandY, DiagonalXdiffY]:
             for line in lines:
                 for resultRelative in self.__cutLineAtWalkingThroughFigures(line, startField):
                     resultFields.append(resultRelative)
 
-        resultFields:list[dict]|list = self.__getBackTurnsDataByRelativeTurns(relativeMaybePossibleTurnsData, resultFields)
         return resultFields
     
-    def __cutLineAtWalkingThroughFigures(self, Line:list[tuple], startField:Feld)->list[tuple]|list:
+    def __cutLineAtWalkingThroughFigures(self, Line:list[dict], startField:Feld)->list[dict]|list:
         '''
         Vor.: 'Line' ist nach zunehmenden Abstand sortiert und geht entweder Wagerecht oder Horizontal
         Eff.: -
@@ -616,7 +613,7 @@ class Brett(pygame.sprite.Sprite):
         '''
         resultLine = []
         for relative in Line: # Für jedes Feld in der Liste in der bereits richtigen Reignfolge durchgehen und zum ergebniss hinzufügen, wenn etwas im Weg stegt, dann stoppen
-            inspectField:Feld|None = self.getRelativeField(startField.getLabel(), relative)
+            inspectField:Feld|None = self.__fields[relative["fieldLabel"]]
             if type(inspectField) != Feld:
                 continue
             if inspectField.getFigure() != None:
@@ -625,23 +622,26 @@ class Brett(pygame.sprite.Sprite):
             resultLine.append(relative)
         return resultLine
     
-    def __sortToDestination(self, Line:list, sortIndex:int)->list:
-        Line.sort()
-        Line = self.__SpitNegatives(Line, sortIndex)
+    def __getPointFromDict(self, DataDict:dict)->tuple:
+        return DataDict['point']
+    
+    def __sortToDestination(self, Line:list[dict], sortIndex:int)->list[list[dict]]:
+        Line.sort(key=self.__getPointFromDict)
+        Line = self.__SpitNegativePoints(Line, sortIndex)
         return self.__reverseFirstPart(Line)
     
-    def __reverseFirstPart(self, Line:list[list[tuple], list[tuple]])->list:
+    def __reverseFirstPart(self, Line:list)->list:
         firstPartLine = Line[0]
         if type(firstPartLine) == list:
             firstPartLine.reverse()
         return firstPartLine, Line[1]
     
-    def __SpitNegatives(self, Line:list[tuple], SplitNumberIndex:int)->list[list[tuple], list[tuple]]:
+    def __SpitNegativePoints(self, Line:list[dict], SplitNumberIndex:int)->list[list, list]:
         LinePositives = []
         LineNegatives = []
 
         for Element in Line:
-            if Element[SplitNumberIndex] < 0:
+            if Element['point'][SplitNumberIndex] < 0:
                 LineNegatives.append(Element)
                 continue
             LinePositives.append(Element)
