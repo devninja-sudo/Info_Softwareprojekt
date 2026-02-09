@@ -77,6 +77,7 @@ class Brett(pygame.sprite.Sprite):
         self.__fields["d1"].setFigure(Dame("assets/graphics/w_dame.png",self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
         self.__fields["e1"].setFigure(Koenig("assets/graphics/w_koenig.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
 
+
     def __buildPawnRow(self, RowNumber:int, scale:float, texturePath:str, teamID:int) -> None:
         for i in range(self.__fields_count):
             fieldLabelLetter:str = chr(ord(self.__field_label_start_letter)+i)
@@ -232,7 +233,13 @@ class Brett(pygame.sprite.Sprite):
             except KeyError:
                 print("Oh, that should't happen. You need to restart the game. ERROR: MAJOR ERROR in Function Brett.__setFigureEvent - killMaybeFigureField")
                 return
-            killMaybeFigureField.setFigure(None)
+            killMaybeFigure = killMaybeFigureField.getFigure()
+            if matchingTurnData["killMaybeFigureType"] == type(killMaybeFigure):
+                    if type(killMaybeFigure) == Bauer:
+                        if not(matchingTurnData["killMaybeFigureMustHadDoubleWalkLastTurn"]):
+                            killMaybeFigureField.setFigure(None)
+                        elif matchingTurnData["killMaybeFigureMustHadDoubleWalkLastTurn"] and killMaybeFigure.hasDidDoubleWalkInTurn(self.__turnNumber-1):
+                            killMaybeFigureField.setFigure(None)
 
         clickedField.setFigure(beforeCursorFigur)
         self.__cursor.setFigure(None)
