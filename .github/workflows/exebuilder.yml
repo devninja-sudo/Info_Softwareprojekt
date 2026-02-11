@@ -1,4 +1,4 @@
-name: dependencys installieren und EXE builden
+name: Download Dependencies and Build EXE
 
 on:
   pull_request:
@@ -85,7 +85,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ steps.version.outputs.new_version }}
-        name: SnakeGame v${{ steps.version.outputs.new_version }}
-        files: dist/SnakeGame.exe
+        name: Schachspiel v${{ steps.version.outputs.new_version }}
+        files: dist/Schach.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
