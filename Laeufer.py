@@ -13,7 +13,7 @@ class Laeufer(FigurBuilder):
         possibleZuege = []
         for i in range(1, 8):
             for directionPoint in [(i, i), (-i, i), (-i, -i), (i, -i)]:
-                    possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, directionPoint, self.__mustKill)
+                    possibleZuege = self.gebeneueZugListemitneuemZug(originFieldLabel, possibleZuege, directionPoint, self.__mustKill)
         return possibleZuege
     
 

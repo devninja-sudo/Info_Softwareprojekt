@@ -178,7 +178,7 @@ class Brett(pygame.sprite.Sprite):
             return
         
         if self.__eventMode == "processing":
-            print("Please slow down. I'm still Calculating! \n    You thing this is in an Error? Please communicate with us!")
+            print("Please slow down. I'm still Calculating! \n    You think this is in an Error? Please communicate with us!")
             return
         print(f"Didn't found the Event for the current EventMode: {self.__eventMode}")
 
@@ -238,7 +238,7 @@ class Brett(pygame.sprite.Sprite):
                     if type(killMaybeFigure) == Bauer:
                         if not(matchingTurnData["killMaybeFigureMustHadDoubleWalkLastTurn"]):
                             killMaybeFigureField.setFigure(None)
-                        elif matchingTurnData["killMaybeFigureMustHadDoubleWalkLastTurn"] and killMaybeFigure.hasDidDoubleWalkInTurn(self.__turnNumber-1):
+                        elif matchingTurnData["killMaybeFigureMustHadDoubleWalkLastTurn"] and killMaybeFigure.hatDoppelzuginZugnummer(self.__turnNumber-1):
                             killMaybeFigureField.setFigure(None)
 
         clickedField.setFigure(beforeCursorFigur)
@@ -474,7 +474,7 @@ class Brett(pygame.sprite.Sprite):
 
         canJump:bool = startFigure.getCanJump()
         canKillMates:bool = startFigure.getCanKillMates()
-        relativeMaybePossibleTurnsData:list[dict] = startFigure.getMaybePossibleTurns(startFieldLabel)                           # Diese sollten eig. nicht Links zu nicht existenten Feldern haben
+        relativeMaybePossibleTurnsData:list[dict] = startFigure.gebeMoeglicheZuege(startFieldLabel)                           # Diese sollten eig. nicht Links zu nicht existenten Feldern haben
         relativeMaybePossibleTurnsData:list[dict] = self.__getOnlyTurnDataWithValidFields(relativeMaybePossibleTurnsData)   # Das ist jetzt trotzdem nochmal Sichergestellt, wer weiß oder so...
 
         if not(canJump):
@@ -525,7 +525,7 @@ class Brett(pygame.sprite.Sprite):
                     continue
                 if relativeMaybePossibleTurnData["killMaybeFigureType"] != None and relativeMaybePossibleTurnData["killMaybeFigureType"] != type(killMaybeFigureFieldFigure):
                     continue
-                if relativeMaybePossibleTurnData["killMaybeFigureMustHadDoubleWalkLastTurn"] and not(killMaybeFigureFieldFigure.hasDidDoubleWalkInTurn(self.__turnNumber-1)):
+                if relativeMaybePossibleTurnData["killMaybeFigureMustHadDoubleWalkLastTurn"] and not(killMaybeFigureFieldFigure.hatDoppelzuginZugnummer(self.__turnNumber-1)):
                     continue
 
             if targetFieldOfTurn.getFigure() != None and not(relativeMaybePossibleTurnData["canKill"]):

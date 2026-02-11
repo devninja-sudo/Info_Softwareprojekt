@@ -21,10 +21,10 @@ class Koenig(FigurBuilder):
             for j in range(-1, 2, 1):
                 if i == 0 and j == 0:
                     continue
-                possibleTurns = self.getNewZugListWithAddingRelative(originFieldLabel, possibleTurns, (i, j), self.__mustKill, self.__canKill, self.__hasAnxiety)
+                possibleTurns = self.gebeneueZugListemitneuemZug(originFieldLabel, possibleTurns, (i, j), self.__mustKill, self.__canKill, self.__hasAnxiety)
         if not(self.getHasMoved()):
-            possibleTurns = self.getNewZugListWithAddingRelative(originFieldLabel, possibleTurns, (2, 0), False, False, True, "castling", self.convertRelativePointToFieldLabel(originFieldLabel, (3, 0)), Turm, False, self.convertRelativePointToFieldLabel(originFieldLabel, (1, 0)))
-            possibleTurns = self.getNewZugListWithAddingRelative(originFieldLabel, possibleTurns, (-3, 0), False, False, True, "castling", self.convertRelativePointToFieldLabel(originFieldLabel, (-4, 0)), Turm, False, self.convertRelativePointToFieldLabel(originFieldLabel, (-2, 0)))
+            possibleTurns = self.gebeneueZugListemitneuemZug(originFieldLabel, possibleTurns, (2, 0), False, False, True, "castling", self.konvertiererelativenPunktzuFeldbezeichnung(originFieldLabel, (3, 0)), Turm, False, self.konvertiererelativenPunktzuFeldbezeichnung(originFieldLabel, (1, 0)))
+            possibleTurns = self.gebeneueZugListemitneuemZug(originFieldLabel, possibleTurns, (-3, 0), False, False, True, "castling", self.konvertiererelativenPunktzuFeldbezeichnung(originFieldLabel, (-4, 0)), Turm, False, self.konvertiererelativenPunktzuFeldbezeichnung(originFieldLabel, (-2, 0)))
         return possibleTurns
 
 
