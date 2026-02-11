@@ -20,14 +20,14 @@ class Bauer(FigurBuilder):
             richtung = 1
         else:
             richtung = -1
-        moeglicheZuege = self.gebeneueZugListemitneuemZug(vorherigesFeldBezeichnung, moeglicheZuege, (0, 1*richtung), self.__mussSchlagen, False)
+        moeglicheZuege = self.gebeNeueZuglisteMitNeuemZug(vorherigesFeldBezeichnung, moeglicheZuege, (0, 1*richtung), self.__mussSchlagen, False)
         if int(vorherigesFeldBezeichnung[1]) == 2 and richtung == 1:
-            moeglicheZuege = self.gebeneueZugListemitneuemZug(vorherigesFeldBezeichnung, moeglicheZuege, (0, 2*richtung), self.__mussSchlagen, False, onDoneTurnCall=self.hatDoppelschrittgemacht)
+            moeglicheZuege = self.gebeNeueZuglisteMitNeuemZug(vorherigesFeldBezeichnung, moeglicheZuege, (0, 2*richtung), self.__mussSchlagen, False, onDoneTurnCall=self.hatDoppelschrittgemacht)
         elif int(vorherigesFeldBezeichnung[1]) == 7 and richtung == -1:
-            moeglicheZuege = self.gebeneueZugListemitneuemZug(vorherigesFeldBezeichnung, moeglicheZuege, (0, 2*richtung), self.__mussSchlagen, False, onDoneTurnCall=self.hatDoppelschrittgemacht)
+            moeglicheZuege = self.gebeNeueZuglisteMitNeuemZug(vorherigesFeldBezeichnung, moeglicheZuege, (0, 2*richtung), self.__mussSchlagen, False, onDoneTurnCall=self.hatDoppelschrittgemacht)
 
-        moeglicheZuege = self.gebeneueZugListemitneuemZug(vorherigesFeldBezeichnung, moeglicheZuege, (1, 1*richtung), True, True, schlagbareFigurenFelder=self.konvertiererelativenPunktzuFeldbezeichnung(vorherigesFeldBezeichnung, (1, 0)), moeglicherweiseSchlagbarerFigurenTyp=Bauer, zuSchlagendeFigurHatDoppelschrittGemacht=True)
-        moeglicheZuege = self.gebeneueZugListemitneuemZug(vorherigesFeldBezeichnung, moeglicheZuege, (-1, 1*richtung), True, True, schlagbareFigurenFelder=self.konvertiererelativenPunktzuFeldbezeichnung(vorherigesFeldBezeichnung, (-1, 0)), moeglicherweiseSchlagbarerFigurenTyp=Bauer, zuSchlagendeFigurHatDoppelschrittGemacht=True)
+        moeglicheZuege = self.gebeNeueZuglisteMitNeuemZug(vorherigesFeldBezeichnung, moeglicheZuege, (1, 1*richtung), True, True, schlagbareFigurenFelder=self.konvertiererelativenPunktzuFeldbezeichnung(vorherigesFeldBezeichnung, (1, 0)), moeglicherweiseSchlagbarerFigurenTyp=Bauer, zuSchlagendeFigurHatDoppelschrittGemacht=True)
+        moeglicheZuege = self.gebeNeueZuglisteMitNeuemZug(vorherigesFeldBezeichnung, moeglicheZuege, (-1, 1*richtung), True, True, schlagbareFigurenFelder=self.konvertiererelativenPunktzuFeldbezeichnung(vorherigesFeldBezeichnung, (-1, 0)), moeglicherweiseSchlagbarerFigurenTyp=Bauer, zuSchlagendeFigurHatDoppelschrittGemacht=True)
         
         return moeglicheZuege
 

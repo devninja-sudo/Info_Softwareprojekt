@@ -19,8 +19,8 @@ class Springer(FigurBuilder):
         
         for i in [-1, 1]:
             for j in [-1, 1]:
-                possibleZuege = self.gebeneueZugListemitneuemZug(originFieldLabel, possibleZuege, (self.__SchrittLaenge*i, self.__SchrittBreite*j), self.__mustKill)
-                possibleZuege = self.gebeneueZugListemitneuemZug(originFieldLabel, possibleZuege, (self.__SchrittBreite*i, self.__SchrittLaenge*j), self.__mustKill)
+                possibleZuege = self.gebeNeueZuglisteMitNeuemZug(originFieldLabel, possibleZuege, (self.__SchrittLaenge*i, self.__SchrittBreite*j), self.__mustKill)
+                possibleZuege = self.gebeNeueZuglisteMitNeuemZug(originFieldLabel, possibleZuege, (self.__SchrittBreite*i, self.__SchrittLaenge*j), self.__mustKill)
         return possibleZuege
     
 

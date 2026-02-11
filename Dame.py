@@ -13,7 +13,7 @@ class Dame(FigurBuilder):
         possibleZuege = []
         for i in range(1, 8):
             for directionPoint in [(i, i), (-i, i), (-i, -i), (i, -i), (i, 0), (-i, 0), (0, i), (0, -i)]:
-                    possibleZuege = self.gebeneueZugListemitneuemZug(originFieldLabel, possibleZuege, directionPoint, self.__mustKill)
+                    possibleZuege = self.gebeNeueZuglisteMitNeuemZug(originFieldLabel, possibleZuege, directionPoint, self.__mustKill)
         return possibleZuege
 
     

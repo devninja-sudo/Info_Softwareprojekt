@@ -83,7 +83,7 @@ class FigurBuilder(pygame.sprite.Sprite):
             return None
         return targetFieldLabel
     
-    def gebeneueZugListemitneuemZug(self, originFieldLabel:str, oldZugList:list, RelativePoint:tuple[int, int], onlyOnKill:bool, canKill:bool=True, hasAnxiety:bool=False, specialMoveLabel:str|None = None, needFigureOnField:str|None = None, needFigureType:type|None = None,  allowNeededFigureHasTurned:bool|None = None, endPointNeededFigure:str|None = None, onDoneTurnCall:Callable|None=None, moeglicherweiseSchlagbarerFigurenTyp:type|None=None, schlagbareFigurenFelder:str|None=None, zuSchlagendeFigurHatDoppelschrittGemacht:bool=False)->list[dict]:
+    def gebeNeueZuglisteMitNeuemZug(self, originFieldLabel:str, oldZugList:list, RelativePoint:tuple[int, int], onlyOnKill:bool, canKill:bool=True, hasAnxiety:bool=False, specialMoveLabel:str|None = None, needFigureOnField:str|None = None, needFigureType:type|None = None,  allowNeededFigureHasTurned:bool|None = None, endPointNeededFigure:str|None = None, onDoneTurnCall:Callable|None=None, moeglicherweiseSchlagbarerFigurenTyp:type|None=None, schlagbareFigurenFelder:str|None=None, zuSchlagendeFigurHatDoppelschrittGemacht:bool=False)->list[dict]:
         newTurn = {}
         newTurn["point"] = RelativePoint
         fieldLabel:str|None = self.konvertiererelativenPunktzuFeldbezeichnung(originFieldLabel, RelativePoint)

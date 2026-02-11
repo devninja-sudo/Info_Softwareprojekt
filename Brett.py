@@ -270,6 +270,8 @@ class Brett(pygame.sprite.Sprite):
         self.__eventMode = "chooseFigure"
         self.__clearAllFieldHighlights()
         self.checkIfMate()
+        self.setRotation(self.__rotation+180)
+        
     
     def checkIfMate(self)->list[int]:
         checkedTeams = self.__getCheckedTeams()
