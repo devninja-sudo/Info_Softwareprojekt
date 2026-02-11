@@ -22,19 +22,19 @@ jobs:
     
     - name: Build executable with PyInstaller
       run: |
-        pyinstaller --onefile --windowed --name SnakeGame snake_game.py
+        pyinstaller --onefile --windowed --name Schach Brett.py
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: SnakeGame-Windows
+        name: Schachspiel
         path: dist/SnakeGame.exe
     
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
-        files: dist/SnakeGame.exe
+        files: dist/Schach.exe
         draft: false
         prerelease: false
       env:
