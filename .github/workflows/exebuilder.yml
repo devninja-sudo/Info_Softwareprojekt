@@ -1,4 +1,4 @@
-name: Auto Version + Release
+name: dependencys installieren und EXE builden
 
 on:
   pull_request:
