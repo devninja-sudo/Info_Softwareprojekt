@@ -1,0 +1,91 @@
+name: Auto Version + Release
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  build-and-release:
+    if: github.event.pull_request.merged == true
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    # -------------------------
+    # VERSION BERECHNEN
+    # -------------------------
+    - name: Get latest tag
+      id: get_tag
+      shell: bash
+      run: |
+        git fetch --tags
+        TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.00.000")
+        echo "latest=$TAG" >> $GITHUB_OUTPUT
+
+    - name: Calculate next version
+      id: version
+      shell: bash
+      run: |
+        VERSION=${{ steps.get_tag.outputs.latest }}
+        VERSION=${VERSION#v}
+
+        IFS='.' read -r X YY ZZZ <<< "$VERSION"
+
+        TITLE="${{ github.event.pull_request.title }}"
+
+        if [[ "$TITLE" == *"[major]"* ]]; then
+          X=$((X+1))
+          YY=0
+          ZZZ=0
+        elif [[ "$TITLE" == *"[minor]"* ]]; then
+          YY=$((YY+1))
+          ZZZ=0
+        else
+          ZZZ=$((ZZZ+10))
+        fi
+
+        NEW_VERSION="$X.$YY.$ZZZ"
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+    # -------------------------
+    # BUILD
+    # -------------------------
+    - name: Build EXE
+      run: |
+        python -m PyInstaller --onefile --windowed --name SnakeGame snake_game.py
+
+    # -------------------------
+    # TAG ERSTELLEN
+    # -------------------------
+    - name: Create Tag
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        git tag v${{ steps.version.outputs.new_version }}
+        git push origin v${{ steps.version.outputs.new_version }}
+
+    # -------------------------
+    # RELEASE
+    # -------------------------
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.new_version }}
+        name: SnakeGame v${{ steps.version.outputs.new_version }}
+        files: dist/SnakeGame.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
