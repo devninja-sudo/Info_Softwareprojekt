@@ -8,6 +8,8 @@ from FigurBuilder import FigurBuilder
 from Dame import Dame
 from Bauer import Bauer
 from Koenig import Koenig
+from Dialog import Dialog
+
 
 class Brett(pygame.sprite.Sprite):
     def __init__(self, edge_length:int, topLeftCorner:tuple[int, int], field_color1:str="yellow", field_color2:str="red", rotation:int=0):
@@ -269,7 +271,12 @@ class Brett(pygame.sprite.Sprite):
         self.__switchToOtherPlayer()
         self.__eventMode = "chooseFigure"
         self.__clearAllFieldHighlights()
-        self.checkIfMate()
+        if self.checkIfMate() != [-1]:
+            for field in self.__fields.values():
+                if type(field) != Feld:
+                    continue
+                field.addFieldHighlight("GreenOutlineBox")
+                field.addFieldHighlight("SmallGreenMiddleCircle")
     
     def checkIfMate(self)->list[int]:
         checkedTeams = self.__getCheckedTeams()
@@ -278,10 +285,12 @@ class Brett(pygame.sprite.Sprite):
         matedTeams = []
         for team in checkedTeams:
             isMate = True
-            for field in self.__fields:
+            for field in self.__fields.values():
                 if type(field) != Feld:
                     continue
                 fieldFigure = field.getFigure()
+                if fieldFigure == None:
+                    continue
                 if fieldFigure.getTeam() == team:
                     if len(self.getPossibleTurnFields(field)) != 0:
                         isMate = False
@@ -292,6 +301,7 @@ class Brett(pygame.sprite.Sprite):
             return [-1]
         for team in matedTeams:
             print("MATT: ", team)
+            self.__running = False
         return matedTeams
     
     def __getKingFieldsInDanger(self)->list[Feld]:
@@ -322,18 +332,17 @@ class Brett(pygame.sprite.Sprite):
             raise Exception("There must be a Figure on OriginField!")
         
         targetFieldFigur = targetField.getFigure()
-        
-        self.__fields[OriginField.getLabel()].getFigure().moved()
-        self.__fields[targetField.getLabel()].setFigure(MovingFigure)
-        self.__fields[OriginField.getLabel()].setFigure(None)
 
-        
+        OriginField = self.__fields[OriginField.getLabel()]
+        targetField = self.__fields[targetField.getLabel()]
 
+        OriginField.getFigure().moved()
+        targetField.setFigure(MovingFigure)
+        OriginField.setFigure(None)
         resultingDangerFields = self.__getDangerFieldsToTheField(targetField)
-
-        self.__fields[targetField.getLabel()].setFigure(targetFieldFigur)
-        self.__fields[OriginField.getLabel()].setFigure(MovingFigure)
-        self.__fields[OriginField.getLabel()].getFigure().undoMovedCounterbyOne()
+        targetField.setFigure(targetFieldFigur)
+        OriginField.setFigure(MovingFigure)
+        MovingFigure.undoMovedCounterByOne()
 
         return resultingDangerFields
     
