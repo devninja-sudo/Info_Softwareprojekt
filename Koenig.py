@@ -4,14 +4,14 @@ from FigurBuilder import FigurBuilder
 from Turm import Turm
 class Koenig(FigurBuilder):
     def __init__(self, image:str, size:int, field_length:int, field_count:int, fieldLabelStartLetter:str, teamID:int, mustKill:bool=False):
-        super().__init__(image, size, field_length, field_count, fieldLabelStartLetter, teamID, True)
+        super().__init__(image, size, field_length, field_count, fieldLabelStartLetter, teamID, False, None, True)
 
         self.__mustKill:bool = mustKill
         self.__canKill:bool = True
 
 
         self.__hasAnxiety:bool = True
-        self.setKingRole(True)
+        
         
 
 
@@ -24,7 +24,7 @@ class Koenig(FigurBuilder):
                 possibleTurns = self.getNewZugListWithAddingRelative(originFieldLabel, possibleTurns, (i, j), self.__mustKill, self.__canKill, self.__hasAnxiety)
         if not(self.getHasMoved()):
             possibleTurns = self.getNewZugListWithAddingRelative(originFieldLabel, possibleTurns, (2, 0), False, False, True, "castling", self.convertRelativePointToFieldLabel(originFieldLabel, (3, 0)), Turm, False, self.convertRelativePointToFieldLabel(originFieldLabel, (1, 0)))
-            possibleTurns = self.getNewZugListWithAddingRelative(originFieldLabel, possibleTurns, (-3, 0), False, False, True, "castling", self.convertRelativePointToFieldLabel(originFieldLabel, (-4, 0)), Turm, False, self.convertRelativePointToFieldLabel(originFieldLabel, (-2, 0)))
+            possibleTurns = self.getNewZugListWithAddingRelative(originFieldLabel, possibleTurns, (-2, 0), False, False, True, "castling", self.convertRelativePointToFieldLabel(originFieldLabel, (-4, 0)), Turm, False, self.convertRelativePointToFieldLabel(originFieldLabel, (-2, 0)))
         return possibleTurns
 
 

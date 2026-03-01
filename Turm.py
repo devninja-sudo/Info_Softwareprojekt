@@ -3,9 +3,21 @@ from sys import exit
 from FigurBuilder import FigurBuilder
 
 class Turm(FigurBuilder):
+    '''
+    Vor.: -image- ist vom Typstring, welcher den Pfad beschreibt, welche Textur der Turm besitzt. Die Textur ist im PNG Format an dem angegebenden Pfad gespeichert.
+          -size- ist vom Typ Integer und beschreibt wie viele Pixel groß der Turm dargestellt werden soll. Die Textur wird immer Quadratisch geladen.
+          -field_lenght- ist vom Typ Integer und beschreibt, wie viele Pixel ein Feld lang und ist groesser als 0. 
+          -field_count- ist vom Typ Integer und beschreibt, wie viele Felder lang das Schachbrett ist und ist groesser als 0.
+          -fieldLabelStartLetter- ist vom Typ String und beschreibt mit welchem Buchstabe, dass Brett beginnt beschriftet zu werden. Ein Beispiel wäre "a". -fieldLabelStartLetter- besitzt nur ein Zeichen, welches im lateinischen Alphabet ist und der Anzahl des -field_lenght- nächste Buchstabe noch in dem Alphabet existiert.
+          -teamID- ist vom Typ Integer, auch wenn es geht ist für spätere Fälle empfohlen, dass -teamID nicht -1 entspricht.
+          -mustKill- ist vom Typ Boolean und ohne Angabe entspricht er False. -mustKill- beschreibt, ob die Figur einen Zug nur machen kann, wenn er eine Figur mit dem Zug schlagen würde. 
+                     Dabei steht -False- für muss nicht unbedingt schlagen und -True- für muss unbedingt Schlagen.
+    Eff.: -
+    Erg.: Eine Turminstanz ist geliefert, welche -FigurBuilder- geerbt hat.
+    '''
     def __init__(self, image:str, size:int, field_length:int, field_count:int, fieldLabelStartLetter:str, teamID:int, mustKill:bool=False):
         super().__init__(image, size, field_length, field_count, fieldLabelStartLetter, teamID, False)
-        self.__mustKill = False
+        self.__mustKill = mustKill
 
 
 
