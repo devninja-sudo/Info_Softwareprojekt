@@ -263,7 +263,6 @@ if __name__ == "__main__":
     pygame.display.set_caption('Figur Test')
     clock = pygame.time.Clock()
 
-
     TestSpringerGroup = pygame.sprite.GroupSingle()
     TestSpringerGroup.add(FigurBuilder("assets/graphics/s_springer.png", 80, 200, 1))
     
