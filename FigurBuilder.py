@@ -143,9 +143,16 @@ class FigurBuilder(pygame.sprite.Sprite):
 
 
     def convertRelativePointToFieldLabel(self, originFieldLabel:str, RelativePoint:tuple[int, int])->str|None:
-        
-        
-        
+        '''
+        Vor.: -originFieldLabel- ist eine gueltige Schachfeldbezeichnung, mit einer Laenge von 2. Das erste Zeichen ist ein Buchstabe im Berreich des im Anfangsbeschriftungsbuchstaben und dem Anfangsbeschriftungsbuchstaben um der Feldanzahl weiter versetzten Buchstaben.
+              -RelativePoint- ist ein Tuple und beschreibt ein Feld relativ zu dem originFieldLabel,
+                            mit 2 Integern. Der erste Integer ist die Anzahl der Felder, 
+                            welche der Zug in Richtung der aufsteigenden Buchstaben geht und 
+                            Der zweite ist die Anzahl der Felder, welche der Zug in Richtung der aufsteigenden Zahlen geht. Negative Integer sind in beiden faelllen zulaessig, indem Fall gehen sie in die andere Richtung.
+        Eff.: -
+        Erg.: Ist in -RelativePoint- ein Feld beschrieben, welches außerhalb des bereits angegebenden Schachbrettes führt ist None geliefert.
+              Ist in -RelativePoint- ein gueltiges Feld beschrieben, so ist die Feldbezeichnung des relativ beschriebendes Feldes geliefert als String.  
+        '''        
         targetFieldLabel:str = ""
         originLetterID:int = ord(originFieldLabel[0])
         originNumberID:int = int(originFieldLabel[1:])
@@ -159,11 +166,72 @@ class FigurBuilder(pygame.sprite.Sprite):
             return None
         return targetFieldLabel
     
-    def getNewZugListWithAddingRelative(self, originFieldLabel:str, oldZugList:list, RelativePoint:tuple[int, int], onlyOnKill:bool, canKill:bool=True, hasAnxiety:bool=False, specialMoveLabel:str|None = None, needFigureOnField:str|None = None, needFigureType:type|None = None,  allowNeededFigureHasTurned:bool|None = None, endPointNeededFigure:str|None = None, onDoneTurnCall:Callable|None=None, killMaybeFigureType:type|None=None, killMaybeFigureField:str|None=None, killMaybeFigureMustHadDoubleWalkLastTurn:bool=False)->list[dict]:
+    def getNewTurnsListWithAddingRelative(self, originFieldLabel:str, oldZugList:list, RelativePoint:tuple[int, int], onlyOnKill:bool, canKill:bool=True, hasAnxiety:bool=False, specialMoveLabel:str|None = None, needFigureOnField:str|None = None, needFigureType:type|None = None,  allowNeededFigureHasTurned:bool|None = None, endPointNeededFigure:str|None = None, onDoneTurnCall:Callable|None=None, killMaybeFigureType:type|None=None, killMaybeFigureField:str|None=None, killMaybeFigureMustHadDoubleWalkLastTurn:bool=False)->list[dict]:
+        '''
+        Vor.: -originFieldLabel- ist eine gueltige Schachfeldbezeichnung, mit einer Laenge von 2. Das erste Zeichen ist ein Buchstabe im Berreich des im Anfangsbeschriftungsbuchstaben und dem Anfangsbeschriftungsbuchstaben um der Feldanzahl weiter versetzten Buchstaben.
+              -oldZugList- ist eine leere Liste oder eine Liste mit Elementen, welche Eintraege enthaelt, welche durch die korrekte Nutzung der MethodegetNewZugListWithAddingRelative an eine Liste hätte angehangen sein können oder angehangen wurde. 
+              -RelativePoint- ist ein Tuple und beschreibt ein Feld relativ zu dem originFieldLabel, 
+                            mit 2 Integern. Der erste Integer ist die Anzahl der Felder, 
+                            welche der Zug in Richtung der aufsteigenden Buchstaben geht und 
+                            der zweite ist die Anzahl der Felder, welche der Zug in Richtung der aufsteigenden Zahlen geht. 
+                            Negative Integer sind in beiden faelllen zulaessig, indem Fall gehen sie in die andere Richtung.
+              -onlyOnKill- ist ein Boolean und beschreibt, ob die Figur nur zu dem mit -RelativePoint- beschriebenden Feld gehen kann, 
+                            wenn sie auf diesen Feld eine Figur schlagen wuerden.
+              -canKill- ist ein Boolean, welches ohne Angabe auf True gesetzt wird. Dieses Argument beschreibt, 
+                        ob die Figur beim gehen zu dem mit -RelativePoint- beschriebenden Feld gehen kann, 
+                        wenn dabei eine Figur geschlagen werden wuerde.
+              -hasAnxiety- ist ein Boolean, welches ohne Angabe auf False gesetzt wurde, ausser wenn die Figur die Koenigrolle traegt ist es auf True gesetzt. 
+                        Dieses Argument beschreibt, ob die Figur sich nicht zu dem mit -RelativePoint- beschriebenden Feld gehen kann,
+                        wenn sie auf dem Feld im naechsten Zug geschlagen werden koennte. 
+                        False steht dafuer, dass sie zu dem Feld trotzdem gehen wuerde und
+                        True steht dafuer, dass sie es nicht tuen wurde.
+              -specialMoveLabel- muss nicht angegeben sein, 
+                                wenn -needFigureOnField- und -needFigureType- und -allowNeededFigureHasTurned- auch None entspricht. 
+                                Es beschreibt eine spezielle Zug Bezeichnung als String, welche eventuell für späteres umsetzen der Zuege wichtig sein kann.
+              -needFigureOnField- muss nicht angegeben sein. 
+                                Es entspricht einer Feldbezeichnung. 
+                                Nur wenn auf diesem Feld eine Figur steht soll der angegebende Zug umgesetzt werden und ein Feld angegeben wurde. 
+              -needFigureType- muss nicht angegeben sein. 
+                                Bei Angabe beschreibt es als Typ welcher Typ von Figur auf bei -needFigureOnField- angesprochendem Feld zu stehen hat nur wenn dieser Typ von Figur auf diesem Feld steht soll der Zug gesetzt werden.
+              -allowNeededFigureHasTurned- muss nicht angeben sein. 
+                                Es beschreibt bei Angabe, inform eines Boolean, ob die benoetigte Figur auf dem Feld -needFigureOnField- sich bereits bewegt haben darf.
+              -endPointNeededFigure- muss nicht angeben sein. 
+                                Es beschreibt bei Angabe, inform eines Strings, auf welchem Feld die Figur auf dem mit -needFigureOnField- gemeinten Feld nach dem Zug stehen soll.
+                                Ohne Angabe bleibt die Figur auf dem mit -needFigureOnField- gemeinten Feld auf dem Feld stehen.
+              -onDoneTurnCall- muss nicht angegeben sein.
+                                Bei Angabe entspricht -onDoneTurnCall- eine existierende Methode/Funktion.
+                                Bei Angabe beschreibt -onDoneTurnCall-, welche Methode/Funktion nach durchführen des Zuges aufgerufen werden soll.
+              -killMaybeFigureField- muss nicht angegeben sein, wenn -killMaybeFigureType-, -killMaybeFigureField- und -killMaybeFigureMustHadDoubleWalkLastTurn- auch nicht angegeben ist oder None entspricht.
+                                Bei Angabe beschreibt es ein Feld, inform einer Feldbezeichnung als String, auf welchem eine Figur auf dem beschriebendem Feld zusaetzlich geschlagen werden soll.
+              -killMaybeFigureType- muss nicht immer angegeben sein, nur wenn -killMaybeFigureMustHadDoubleWalkLastTurn- mit True angegeben wurde muss es mit einer Figurenklasse definiert sein, welche ueber eine Methode hasDidDoubleWalkInTurn(self, TurnNumber:int)->bool: verfuegt, wie bei der Klasse vom 'Bauer'.
+                                Bei Angabe entspricht es einem Figuren Typ.
+                                Bei Angabe legt es fest, welchen Figurentyp auf dem -killMaybeFigureField- zusaetzlich definierten Feld zum schlagen einer Figur geschlagen werden koennen soll, andere Figurentypen sollen nicht mehr geschlagen werden sollen durch die zusaetzliche Methode.
+              -killMaybeFigureMustHadDoubleWalkLastTurn- muss nicht angegeben sein.
+                                                        Bei Angabe legt es fest, dass der Zug nur durchgeführt werden soll, wenn die Figur auf dem mit -killMaybeFigureField- gemeinten Feld ein Doppelschritt gemacht haben soll in dem letztem Zug.     
+        Eff.: -
+        Erg.: 
+            Wenn -RelativePoint- ein Feld beschreibt, welches nicht auf dem definierten Schachbrett existiert ist nur die -oldZugList- geliefert, 
+            sonst ist eine Liste, welche aus -oldZugList- besteht und eine Tabelle angehangen wurde, welche beschreibt welche genau beschreibt unter welchen Bedingungen ein bestimmter Zug durchgefuehrt werden kann geliefert. 
+            Die ggf. der Liste -oldZugList- Angehangende Tabelle besteht in diesem Fall aus ("" sind die Keys und das hinter dem = die Werte):
+                "point" = -RelativePoint-
+                "fieldLabel" eine gueltige Feldbezeichnung zu dem sich die Figur bewegen soll.
+                "onlyOnKill" = -onlyOnKill-
+                "canKill" = -canKill-
+                "killMaybeFigureType" = -killMaybeFigureType-
+                "killMaybeFigureField" = -killMaybeFigureField-
+                "killMaybeFigureMustHadDoubleWalkLastTurn" = -killMaybeFigureMustHadDoubleWalkLastTurn-
+                "hasAnxiety" = -hasAnxiety- oder immer True, wenn es die Figur die Koenigsrolletraegt
+                "specialTurnType" = -specialMoveLabel-
+                "needFigureOnField" = -needFigureOnField-
+                "neededFigureType" = -needFigureType-
+                "allowNeededFigureHasTurned" = allowNeededFigureHasTurned
+                "endPointNeededFigure" = endPointNeededFigure
+                "onDoneTurnCall" = onDoneTurnCall
+        '''        
         newTurn = {}
         newTurn["point"] = RelativePoint
         fieldLabel:str|None = self.convertRelativePointToFieldLabel(originFieldLabel, RelativePoint)
-        if fieldLabel == None:                          # Wenn der Zug außerhalb des Brettes gehen würde -> wird fieldLabel == None zu True
+        if fieldLabel == None:
             return oldZugList
         newTurn["fieldLabel"] = fieldLabel
         newTurn["onlyOnKill"] = onlyOnKill

@@ -4,6 +4,7 @@ from FigurBuilder import FigurBuilder
 
 class Turm(FigurBuilder):
     '''
+    Zusaetzlicher Hinweis fuer Verwendung: Der Turm gibt nur eine Surface zur verfuegung ohne eine Korrekte Positionsangabe auf einen evtl. späteren Schachbrett.
     Vor.: -image- ist vom Typstring, welcher den Pfad beschreibt, welche Textur der Turm besitzt. Die Textur ist im PNG Format an dem angegebenden Pfad gespeichert.
           -size- ist vom Typ Integer und beschreibt wie viele Pixel groß der Turm dargestellt werden soll. Die Textur wird immer Quadratisch geladen.
           -field_lenght- ist vom Typ Integer und beschreibt, wie viele Pixel ein Feld lang und ist groesser als 0. 
@@ -26,7 +27,7 @@ class Turm(FigurBuilder):
         
         for i in range(1, 8):
                 for directionPoint in [(i, 0), (-i, 0), (0, i), (0, -i)]:
-                    possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, directionPoint, self.__mustKill)
+                    possibleZuege = self.getNewTurnsListWithAddingRelative(originFieldLabel, possibleZuege, directionPoint, self.__mustKill)
         return possibleZuege
 
 if __name__ == "__main__":

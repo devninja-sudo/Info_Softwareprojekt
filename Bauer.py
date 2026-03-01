@@ -20,14 +20,14 @@ class Bauer(FigurBuilder):
             direction = 1
         else:
             direction = -1
-        possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, (0, 1*direction), self.__mustKill, False)
+        possibleZuege = self.getNewTurnsListWithAddingRelative(originFieldLabel, possibleZuege, (0, 1*direction), self.__mustKill, False)
         if int(originFieldLabel[1]) == 2 and direction == 1:
-            possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, (0, 2*direction), self.__mustKill, False, onDoneTurnCall=self.didDoubleWalk)
+            possibleZuege = self.getNewTurnsListWithAddingRelative(originFieldLabel, possibleZuege, (0, 2*direction), self.__mustKill, False, onDoneTurnCall=self.didDoubleWalk)
         elif int(originFieldLabel[1]) == 7 and direction == -1:
-            possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, (0, 2*direction), self.__mustKill, False, onDoneTurnCall=self.didDoubleWalk)
+            possibleZuege = self.getNewTurnsListWithAddingRelative(originFieldLabel, possibleZuege, (0, 2*direction), self.__mustKill, False, onDoneTurnCall=self.didDoubleWalk)
 
-        possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, (1, 1*direction), True, True, killMaybeFigureField=self.convertRelativePointToFieldLabel(originFieldLabel, (1, 0)), killMaybeFigureType=Bauer, killMaybeFigureMustHadDoubleWalkLastTurn=True)
-        possibleZuege = self.getNewZugListWithAddingRelative(originFieldLabel, possibleZuege, (-1, 1*direction), True, True, killMaybeFigureField=self.convertRelativePointToFieldLabel(originFieldLabel, (-1, 0)), killMaybeFigureType=Bauer, killMaybeFigureMustHadDoubleWalkLastTurn=True)
+        possibleZuege = self.getNewTurnsListWithAddingRelative(originFieldLabel, possibleZuege, (1, 1*direction), True, True, killMaybeFigureField=self.convertRelativePointToFieldLabel(originFieldLabel, (1, 0)), killMaybeFigureType=Bauer, killMaybeFigureMustHadDoubleWalkLastTurn=True)
+        possibleZuege = self.getNewTurnsListWithAddingRelative(originFieldLabel, possibleZuege, (-1, 1*direction), True, True, killMaybeFigureField=self.convertRelativePointToFieldLabel(originFieldLabel, (-1, 0)), killMaybeFigureType=Bauer, killMaybeFigureMustHadDoubleWalkLastTurn=True)
         
         return possibleZuege
 
