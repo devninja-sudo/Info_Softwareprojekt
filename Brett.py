@@ -4,44 +4,97 @@ from Feld import Feld
 from Springer import Springer
 from Turm import Turm
 from Laeufer import Laeufer
-from FigurBuilder import FigurBuilder
 from Dame import Dame
 from Bauer import Bauer
 from Koenig import Koenig
 from Dialog import Dialog
-
+from time import time
 
 class Brett(pygame.sprite.Sprite):
     def __init__(self, edge_length:int, topLeftCorner:tuple[int, int], field_color1:str="yellow", field_color2:str="red", rotation:int=0):
         super().__init__()
 
-        self.__onTurnTeam:int = 0 # Später natürlich 0
-        self.__cursor = None
-        self.__eventMode:str = None 
-        self.__running:bool = False
+        self.SetupTurnVars()
 
         self.__rotation:int = rotation
         self.__edge_length:int = edge_length
         self.__fields_count:int = 8
         self.__field_length:int = edge_length//self.__fields_count
         
-
         self.__field_color_1:str = field_color1
         self.__field_color_2:str = field_color2
 
         self.__field_label_start_letter:str = "a"
-        self.__turnNumber:int = 0
-
+        
         #die Variablen müssen so heißen und public sein wegen Pygame
         self.image:pygame.Surface = pygame.surface.Surface((edge_length, edge_length))
         self.rect:pygame.Rect = self.image.get_rect(topleft = topLeftCorner)
+
+        self.__DialogGroup = pygame.sprite.Group()
+        self.setupDialogGroup()
 
         self.__fields:dict[str:Feld] = self.__createFields()
         self.__fieldsGroup:pygame.sprite.Group = self.__createFieldsGroup()
         self.__setupBrett()
         self.__generateImage()
+        self.__resignDialog.hideSurface()
+
+    def SetupTurnVars(self):
+        self.__onTurnTeam:int = 0 
+        self.__cursor = None
+        self.__eventMode:str = None 
+        self.__running:bool = False
+        self.__turnNumber:int = 0
+        self.__PawnPromotes:list = []
 
 
+    
+    def restartGame(self):
+        self.__reset_game_state()
+        self.start()
+    
+    def getFieldRow(self, RowNumber:int)->list[Feld]:
+        RowFields = []
+        for i in range(self.__fields_count):
+            letter = chr(ord(self.__field_label_start_letter)+i)
+            RowFields.append(self.__fields[letter+str(RowNumber)])
+        return RowFields
+    
+    def setupDialogGroup(self):
+        self.__DialogGroup.empty()
+        self.__resignDialog = Dialog(
+            self.rect.width, self.rect.height, 
+            (self.rect.width//2, self.rect.height//2), 
+            "Was möchtest du tun?", self.rect.height//8, 
+            [["Neues Spiel!", self.restartGame]], 
+            self.rect.height//5, 0.4, True, 
+            onVoidClick=self.__generateImage, 
+            posOffset=self.rect.topleft, 
+            onSurfaceChange=self.__generateImage
+        )
+        self.__DialogGroup.add(self.__resignDialog)
+
+    def __reset_game_state(self):
+        self.__DialogGroup.empty()
+        self.__fieldsGroup.empty()
+        
+        for field in self.__fields.values():
+            figure = field.getFigure()
+            if figure is not None:
+                figure.kill()
+            field.setFigure(None)
+        
+        self.__fields.clear()
+        self.__fields = self.__createFields()
+        self.__fieldsGroup = self.__createFieldsGroup()
+        
+        self.setupDialogGroup()
+        self.__resignDialog.hideSurface()
+        
+        self.SetupTurnVars()
+        
+        self.__setupBrett()
+        self.__generateImage()
 
     def start(self)->None:
         if self.__running:
@@ -51,34 +104,48 @@ class Brett(pygame.sprite.Sprite):
 
     def __setupBrett(self)->None:
         #Wird später sauberer geschrieben !!!
-        scale:float = 0.9
-        self.__fields["a8"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
-        self.__fields["h8"].setFigure(Turm("assets/graphics/s_turm.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
-
+        self.__FigureScale:float = 0.9
+        self.__blackTower = Turm("assets/graphics/s_turm.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1)
+        self.__whiteTower = Turm("assets/graphics/w_turm.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0)
         
-        self.__fields["b8"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
-        self.__fields["g8"].setFigure(Springer("assets/graphics/s_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
+        self.__blackQueen = Dame("assets/graphics/s_dame.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1)
+        self.__whiteQueen = Dame("assets/graphics/w_dame.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0)
+        
+        self.__blackKnight = Springer("assets/graphics/s_springer.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1)
+        self.__whiteKnight = Springer("assets/graphics/w_springer.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0)
+        
+        self.__blackBishop = Laeufer("assets/graphics/s_laeufer.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1)
+        self.__whiteBishop = Laeufer("assets/graphics/w_laeufer.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0)
+        
+        self.__blackKing = Koenig("assets/graphics/s_koenig.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1)
+        self.__whiteKing= Koenig("assets/graphics/w_koenig.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0)
+        
+        self.__fields["a8"].setFigure(self.__blackTower)
+        self.__fields["h8"].setFigure(self.__blackTower)
+
+        self.__fields["a1"].setFigure(self.__whiteTower)
+        self.__fields["h1"].setFigure(self.__whiteTower)
+        
+        self.__fields["b8"].setFigure(self.__blackKnight)
+        self.__fields["g8"].setFigure(self.__blackKnight)
             
-        self.__fields["c8"].setFigure(Laeufer("assets/graphics/s_laeufer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
-        self.__fields["f8"].setFigure(Laeufer("assets/graphics/s_laeufer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
+        self.__fields["c8"].setFigure(self.__blackBishop)
+        self.__fields["f8"].setFigure(self.__blackBishop)
 
-        self.__fields["d8"].setFigure(Dame("assets/graphics/s_dame.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
-        self.__fields["e8"].setFigure(Koenig("assets/graphics/s_koenig.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1))
+        self.__fields["d8"].setFigure(self.__blackQueen)
+        self.__fields["e8"].setFigure(self.__blackKing)
 
-        self.__buildPawnRow(7, scale, "assets/graphics/s_bauer.png", 1)
-        self.__buildPawnRow(2, scale, "assets/graphics/w_bauer.png", 0)
+        self.__buildPawnRow(7, self.__FigureScale, "assets/graphics/s_bauer.png", 1)
+        self.__buildPawnRow(2, self.__FigureScale, "assets/graphics/w_bauer.png", 0)
 
-        self.__fields["a1"].setFigure(Turm("assets/graphics/w_turm.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
-        self.__fields["h1"].setFigure(Turm("assets/graphics/w_turm.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
-
-        self.__fields["b1"].setFigure(Springer("assets/graphics/w_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
-        self.__fields["g1"].setFigure(Springer("assets/graphics/w_springer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
+        self.__fields["b1"].setFigure(self.__whiteKnight)
+        self.__fields["g1"].setFigure(self.__whiteKnight)
     
-        self.__fields["c1"].setFigure(Laeufer("assets/graphics/w_laeufer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
-        self.__fields["f1"].setFigure(Laeufer("assets/graphics/w_laeufer.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
-        self.__fields["d1"].setFigure(Dame("assets/graphics/w_dame.png",self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
-        self.__fields["e1"].setFigure(Koenig("assets/graphics/w_koenig.png", self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0))
+        self.__fields["c1"].setFigure(self.__whiteBishop)
+        self.__fields["f1"].setFigure(self.__whiteBishop)
 
+        self.__fields["d1"].setFigure(self.__whiteQueen)
+        self.__fields["e1"].setFigure(self.__whiteKing)
 
     def __buildPawnRow(self, RowNumber:int, scale:float, texturePath:str, teamID:int) -> None:
         for i in range(self.__fields_count):
@@ -115,7 +182,6 @@ class Brett(pygame.sprite.Sprite):
                 fields[field_label] = field_current
         return fields
     
-
     def __getFieldPositionByName(self, field_name:str)->tuple[int, int]:
         lengthID = int(ord(field_name[0])-ord(self.__field_label_start_letter))
         spreadID = int(field_name[1])
@@ -151,6 +217,13 @@ class Brett(pygame.sprite.Sprite):
         self.image.fill("black")
         fieldsGroup = self.__getFieldsGroup()
         fieldsGroup.draw(self.image)
+        if self.__resignDialog.getIfShown():
+            print("true")
+            self.__DialogGroup.draw(self.image)
+        for PromoteData in self.__PawnPromotes:
+            if PromoteData["Dialog"].getIfShown():
+                PromoteData["Group"].draw(self.image)
+        
         
     def update(self) -> None:
         pass
@@ -158,7 +231,18 @@ class Brett(pygame.sprite.Sprite):
     def __CheckIfIsNotAFeldInstance(self, testObject:object) ->bool:
         return type(testObject) != Feld
     
-    def handleClickEvent(self, pos:tuple[int, int])->None:
+    def handleLeftClickEvent(self, pos:tuple[int, int])->None:
+        if self.__resignDialog.getIfShown():
+            self.__resignDialog.handleLeftClick(pos)
+            return
+        
+        for pawnPromoteData in reversed(self.__PawnPromotes):
+            PromoteDialog = pawnPromoteData["Dialog"]
+            if type(PromoteDialog) != Dialog:
+                continue
+            if PromoteDialog.getIfShown():
+                PromoteDialog.handleLeftClick(pos)
+                return
         if not(self.__running):
             return
         
@@ -166,7 +250,6 @@ class Brett(pygame.sprite.Sprite):
         if self.__CheckIfIsNotAFeldInstance(clickedField):
             return
         clickedFieldLabel = clickedField.getLabel()
-
         if self.__eventMode == "chooseFigure":
             self.__eventMode = "processing"
             self.__chooseFigureEvent(clickedField)
@@ -183,6 +266,11 @@ class Brett(pygame.sprite.Sprite):
             print("Please slow down. I'm still Calculating! \n    You thing this is in an Error? Please communicate with us!")
             return
         print(f"Didn't found the Event for the current EventMode: {self.__eventMode}")
+
+    def handleRightClickEvent(self, pos:tuple[int, int])->None:
+        if not(self.__resignDialog.getIfShown()):
+            self.__resignDialog.showSurface()
+            self.__generateImage()
 
     def __resetCursorAndSetEventMode(self, eventMode:str):
         self.__cursor = None
@@ -203,7 +291,7 @@ class Brett(pygame.sprite.Sprite):
             raise Exception("Cursor muss ein Feld sein")
         
         clickedFigure = clickedField.getFigure()
-        clickedFieldLabel:str = clickedField.getLabel()   
+        
 
         matchingTurnData = self.__getMatchingTurnData(self.__cursor, clickedField)
         if matchingTurnData == None:
@@ -246,15 +334,6 @@ class Brett(pygame.sprite.Sprite):
         clickedField.setFigure(beforeCursorFigur)
         self.__cursor.setFigure(None)
 
-        #if self.__onTurnTeam in self.__getCheckedTeams():
-        #    print("Zug nicht möglich (achte auf Schach)")
-        #    clickedField.setFigure(beforeClickedFieldFigure)
-        #    self.__cursor.setFigure(beforeCursorFigur)
-        #
-        #    self.__resetCursorAndSetEventMode("chooseFigure")
-        #    self.__clearAllFieldHighlights()
-        #    return
-        
         if clickedFigure != None:
             if clickedFigure.getTeam() == self.__onTurnTeam:
                 self.__eventMode = "chooseFigure"
@@ -265,42 +344,99 @@ class Brett(pygame.sprite.Sprite):
 
         beforeCursorFigur.moved()
         self.__finishTurn()
+    
+    def __promoteTower(self):
+        self.__doPromote(self.__whiteTower, self.__blackTower)
+    
+    def __promoteBishop(self):
+        self.__doPromote(self.__whiteBishop, self.__blackBishop)
+    
+    def __promoteKnight(self):
+        self.__doPromote(self.__whiteKnight, self.__blackKnight)
+
+    def __promoteQueen(self):
+        self.__doPromote(self.__whiteQueen, self.__blackQueen)
+
+    def __doPromote(self, Team0Figure, Team1Figure):
+        promoteData = self.__PawnPromotes[-1]
+        promoteField:Feld = self.__fields[promoteData["Label"]]
+        promoteDialog:Dialog = promoteData["Dialog"]
+        if promoteField.getFigure().getTeam() == 1:
+            promoteField.setFigure(Team1Figure)
+        elif promoteField.getFigure().getTeam() == 0:
+            promoteField.setFigure(Team0Figure)
+        promoteDialog.hideSurface()
+        promoteDialog.kill()
+        self.__PawnPromotes.pop(-1)
 
     def __finishTurn(self):
+        for row in [1, 8]:
+            for field in self.getFieldRow(row):
+                if type(field.getFigure()) == Bauer:
+                    print("DETECT PROMOTE PAWN" + field.getLabel())
+                    PromoteInfos = {}
+                    PromoteInfos["Dialog"] = Dialog(
+                        self.rect.width, self.rect.height, 
+                        (self.rect.width//2, self.rect.height//2), 
+                        "Zu was soll sich der Bauer auf " + field.getLabel() + "\n entwickeln Team:" + str(self.__onTurnTeam) + "?", self.rect.height//15, 
+                        [
+                            ["Turm!", self.__promoteTower],
+                            ["Läufer!", self.__promoteBishop],
+                            ["Springer!", self.__promoteKnight],
+                            ["Dame!", self.__promoteQueen]
+                            ], 
+                        self.rect.height//18, 0.4, False, 
+                        onVoidClick=self.__generateImage, 
+                        posOffset=self.rect.topleft, 
+                        onSurfaceChange=self.__generateImage
+                    )
+                    PromoteInfos["Group"] = pygame.sprite.GroupSingle()
+                    PromoteInfos["Group"].add(PromoteInfos["Dialog"])
+                    PromoteInfos["Label"] = field.getLabel()
+                    self.__PawnPromotes.append(PromoteInfos)
+                    self.__generateImage()
         self.__turnNumber += 1
         self.__switchToOtherPlayer()
         self.__eventMode = "chooseFigure"
         self.__clearAllFieldHighlights()
-        if self.checkIfMate() != [-1]:
+        matedTeams = self.checkIfMate()
+        if matedTeams != [-1]:
             for field in self.__fields.values():
                 if type(field) != Feld:
                     continue
                 field.addFieldHighlight("GreenOutlineBox")
                 field.addFieldHighlight("SmallGreenMiddleCircle")
+            print("MATT: ", matedTeams)
+        elif not(self.checkIfTeamCanMove(self.__onTurnTeam)):
+            for field in self.__fields.values():
+                if type(field) != Feld:
+                    continue
+                field.addFieldHighlight("GreenOutlineBox")
+            print("Remis, durch keine Zugmöglichkeit mehr!")
     
+    def checkIfTeamCanMove(self, team:int):
+        for field in self.__fields.values():
+            if type(field) != Feld:
+                continue
+            fieldFigure = field.getFigure()
+            if fieldFigure == None:
+                continue
+            if fieldFigure.getTeam() == team:
+                if len(self.getPossibleTurnFields(field)) != 0:
+                    return True
+        return False
+
     def checkIfMate(self)->list[int]:
         checkedTeams = self.__getCheckedTeams()
         if len(checkedTeams) == 0:
             return [-1]
         matedTeams = []
         for team in checkedTeams:
-            isMate = True
-            for field in self.__fields.values():
-                if type(field) != Feld:
-                    continue
-                fieldFigure = field.getFigure()
-                if fieldFigure == None:
-                    continue
-                if fieldFigure.getTeam() == team:
-                    if len(self.getPossibleTurnFields(field)) != 0:
-                        isMate = False
-                        break
-            if isMate:
+            if not(self.checkIfTeamCanMove(team)):
                 matedTeams.append(team)
         if len(matedTeams) == 0:
             return [-1]
         for team in matedTeams:
-            print("MATT: ", team)
             self.__running = False
         return matedTeams
     
@@ -311,7 +447,6 @@ class Brett(pygame.sprite.Sprite):
             if len(self.__getDangerFieldsToTheField(KingField)) != 0:
                 checkedKings.append(KingField)
         return checkedKings 
-    
     
     def __getCheckedTeams(self)->list[int]:
         KingFieldsInDanger:list[Feld] = self.__getKingFieldsInDanger()
@@ -429,8 +564,6 @@ class Brett(pygame.sprite.Sprite):
                 continue
             PossibleTurnFields.append(field)
         return PossibleTurnFields
-
-
 
     def __markAllPosibleFields(self, FigureFieldLabel:str)->None:
         for field in self.getPossibleTurnFields(self.__fields[FigureFieldLabel]):
@@ -608,22 +741,6 @@ class Brett(pygame.sprite.Sprite):
                 return False
         return True
 
-    
-    #def __getBackTurnsDataByRelativeTurns(self, relativePossibleTurnsDatas:list[dict], points:list[tuple[int, int]])->list[dict]|list:
-    #    result:list = []
-    #    for point in points:
-    #        backTurnData = self.__getBackTurnDataByRalativeTurn(relativePossibleTurnsDatas, point)
-    #        if backTurnData == None:
-    #            raise Exception("Could not find Turndata Back")
-    #        result.append(backTurnData)
-    #    return result
-
-    #def __getBackTurnDataByRalativeTurn(self, relativePossibleTurnsDatas:list[dict], point:tuple[int, int])->dict|None:
-    #    for relativePossibleTurnData in relativePossibleTurnsDatas:
-    #        controlPoint:tuple[int, int] = relativePossibleTurnData["point"]
-    #        if controlPoint == point:
-    #            return relativePossibleTurnData
-       
     def __getTurnDataWithoutWalkThroughFigures(self, relativeMaybePossibleTurnsData:list[dict], startField:Feld)->list|list[dict]:
         xLine:list = []
         yLine:list = []
@@ -723,8 +840,6 @@ class Brett(pygame.sprite.Sprite):
         except:
             return None
 
-
-
     def getFieldByCords(self, pos:tuple[int, int])->Feld|None:
         x:int = pos[0]-self.rect.topleft[0]
         y:int = pos[1]-self.rect.topleft[1]
@@ -752,8 +867,7 @@ if __name__ == "__main__":
     Spielbrett = Brett(800, (1920/2-400, 1080/2-400), "white", "black")
     Spielbrett.start()
     TestBrettGroup.add(Spielbrett)
-    print(Spielbrett.getRelativeField("d4", (1, 1)))
-    
+
     
     while True:
         screen.fill("grey")
@@ -762,8 +876,17 @@ if __name__ == "__main__":
                 pygame.quit()
                 exit()
                 continue
-            if event.type == pygame.MOUSEBUTTONUP or event.type == pygame.MOUSEBUTTONDOWN:
-                Spielbrett.handleClickEvent(pygame.mouse.get_pos())
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    startClick = time()
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    if (time() - startClick) >= 5:
+                         Spielbrett.handleRightClickEvent(pygame.mouse.get_pos())
+                    else:
+                        Spielbrett.handleLeftClickEvent(pygame.mouse.get_pos())
+                elif event.button == 3:
+                    Spielbrett.handleRightClickEvent(pygame.mouse.get_pos())
             
         TestBrettGroup.draw(screen)
         TestBrettGroup.update()

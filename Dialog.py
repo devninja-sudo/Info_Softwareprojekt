@@ -3,8 +3,9 @@ from typing import Callable
 
 
 class Dialog(pygame.sprite.Sprite):
-    def __init__(self, DialogWidth:int, DialogHeight:int, centerPosition:tuple[int], headline:str, headlineSize:int, answers:list[list[str, Callable]], answerSize:int, answerDistanceSize:float, closeable:bool, onVoidClick:Callable|None):
+    def __init__(self, DialogWidth:int, DialogHeight:int, centerPosition:tuple[int], headline:str, headlineSize:int, answers:list[list[str, Callable]], answerSize:int, answerDistanceSize:float, closeable:bool, onVoidClick:Callable|None=None, posOffset:tuple[int, int]=(0,0), onSurfaceChange:Callable=None):
         super().__init__()
+        self.__initPhase = True
         self.__width:int = DialogWidth
         self.__height:int = DialogHeight
         self.__centerPosition:tuple[int] = centerPosition
@@ -15,11 +16,19 @@ class Dialog(pygame.sprite.Sprite):
         self.__answers:list[list[str, Callable]] = answers
         self.__closeable:bool = closeable
         self.__onVoidClick:Callable|None = onVoidClick
-        
+        self.__posOffset = posOffset
+        self.__onSurfaceChange = onSurfaceChange
         self.createSelfAnswersSurfaceData()
         self.makeSurface()
+        self.__isShown = True
         
+        self.__initPhase = False
         pass
+
+    def __CallOnSurfaceChange(self):
+        if self.__onSurfaceChange == None:
+            return
+        self.__onSurfaceChange()
 
     def createSelfAnswersSurfaceData(self):
         dialogAnswerFont = pygame.font.Font(None, self.__answerSize)
@@ -35,7 +44,7 @@ class Dialog(pygame.sprite.Sprite):
             else:
                 answerBefore = self.__answersDataWithSurface[i-1]
                 answerBeforeRect:pygame.rect.Rect = answerBefore["rect"]
-                answerData["rect"] = answerData["surface"].get_rect(topleft = (self.__width*0.05, self.__height*self.__answerDistanceSize+answerBeforeRect.height))
+                answerData["rect"] = answerData["surface"].get_rect(topleft = (self.__width*0.05, self.__height*self.__answerDistanceSize+answerBeforeRect.height*i))
             self.__answersDataWithSurface.append(answerData)
 
     def makeSurface(self):
@@ -50,33 +59,38 @@ class Dialog(pygame.sprite.Sprite):
         self.image.blit(self.questionTextSurface, self.questionTextSurface.get_rect(centerx = self.__width//2, top = self.__height*0.05))
         for answerData in self.__answersDataWithSurface:
             self.image.blit(answerData["surface"], answerData["rect"])
+        if not(self.__initPhase):
+            self.__CallOnSurfaceChange()
 
     def hideSurface(self):
+        self.__isShown = False
         self.image.fill("white")
+        if not(self.__initPhase):
+            self.__CallOnSurfaceChange()
+
+    def getIfShown(self):
+        return self.__isShown
 
     def showSurface(self):
+        self.__isShown = True
         self.makeSurface()
 
-    def update(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                  pygame.quit()
-                  exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_z:
-                    self.showSurface()
-                    continue
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for answer in self.__answersDataWithSurface:
-                    AnswerRect:pygame.rect.Rect = answer["rect"]
-                    if not(self.rect.collidepoint(event.pos)):
-                        if self.__onVoidClick != None:
-                            self.__onVoidClick()
-                        if self.__closeable:
-                            self.hideSurface()
-                    if AnswerRect.collidepoint(((event.pos[0] - self.rect.x), (event.pos[1] - self.rect.y))):
-                        if answer["callable"] != None:
-                            answer["callable"]()
+    def handleLeftClick(self, pos:tuple[int, int]):
+        didNoAction = True
+        if not(self.__isShown):
+            return
+        for answer in self.__answersDataWithSurface:
+            AnswerRect:pygame.rect.Rect = answer["rect"]
+            if AnswerRect.collidepoint(pos[0] - self.rect.x - self.__posOffset[0], pos[1] - self.rect.y - self.__posOffset[1]):
+                if answer["callable"] != None:
+                    answer["callable"]()
+                    didNoAction = False
+                    break
+        if didNoAction:
+            if self.__onVoidClick != None:
+                self.__onVoidClick()
+            if self.__closeable:
+                self.hideSurface()
 
 def click():
     #TestDialog.hideSurface()
