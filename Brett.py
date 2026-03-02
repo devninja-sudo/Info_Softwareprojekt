@@ -1,5 +1,7 @@
 import pygame
 from sys import exit
+import socket
+import threading
 from Feld import Feld
 from Springer import Springer
 from Turm import Turm
@@ -7,7 +9,7 @@ from Laeufer import Laeufer
 from Dame import Dame
 from Bauer import Bauer
 from Koenig import Koenig
-from Dialog import Dialog
+from Dialog import Dialog, TextInputDialog
 from time import time
 
 class Brett(pygame.sprite.Sprite):
@@ -15,6 +17,7 @@ class Brett(pygame.sprite.Sprite):
         super().__init__()
 
         self.SetupTurnVars()
+        self.__setupNetzwerkVars()
 
         self.__rotation:int = rotation
         self.__edge_length:int = edge_length
@@ -38,6 +41,7 @@ class Brett(pygame.sprite.Sprite):
         self.__setupBrett()
         self.__generateImage()
         self.__resignDialog.hideSurface()
+        self.__setupStartDialogs()
 
     def SetupTurnVars(self):
         self.__onTurnTeam:int = 0 
@@ -47,10 +51,260 @@ class Brett(pygame.sprite.Sprite):
         self.__turnNumber:int = 0
         self.__PawnPromotes:list = []
 
+    def __setupNetzwerkVars(self):
+        self.__startKlar:bool = False
+        self.__netzAktiv:bool = False
+        self.__netzPort:int = 55555
+        self.__netzSock:socket.socket|None = None
+        self.__netzBuffer:str = ""
+        self.__netzVerbundenEvent = threading.Event()
+        self.__netzEmpfangThread:threading.Thread|None = None
+        self.__netzListenerThread:threading.Thread|None = None
+        self.__netzSucheThread:threading.Thread|None = None
+        self.__spielerName:str = ""
+        self.__meinTeam:int = 0
+        self.__wendeRemoteZugAn:bool = False
+        self.__modusDialog:Dialog|None = None
+        self.__nameDialog:TextInputDialog|None = None
+        self.__netzStatusDialog:Dialog|None = None
+        self.__startDialogGruppe = pygame.sprite.Group()
+
+    def __setupStartDialogs(self):
+        self.__startDialogGruppe.empty()
+        self.__modusDialog = Dialog(
+            self.rect.width, self.rect.height,
+            (self.rect.width//2, self.rect.height//2),
+            "Spielmodus wählen", self.rect.height//10,
+            [
+                ["Singleplayer", self.__waehleSingleplayer],
+                ["Multiplayer (LAN)", self.__zeigeNameDialog]
+            ],
+            self.rect.height//8, 0.42, False,
+            onVoidClick=self.__generateImage,
+            posOffset=self.rect.topleft,
+            onSurfaceChange=self.__generateImage
+        )
+        self.__startDialogGruppe.add(self.__modusDialog)
+        self.__generateImage()
+
+    def __zeigeNameDialog(self):
+        self.__nameDialog = TextInputDialog(
+            self.rect.width, self.rect.height,
+            (self.rect.width//2, self.rect.height//2),
+            "Name eingeben", self.rect.height//10,
+            self.rect.height//10,
+            "Weiter", self.rect.height//10,
+            False,
+            onSubmit=self.__uebernehmeSpielerName,
+            onVoidClick=self.__generateImage,
+            posOffset=self.rect.topleft,
+            onSurfaceChange=self.__generateImage,
+            maxInputLength=24
+        )
+        self.__startDialogGruppe.empty()
+        self.__startDialogGruppe.add(self.__nameDialog)
+        self.__generateImage()
+
+    def __zeigeNetzStatusDialog(self, headline:str):
+        self.__netzStatusDialog = Dialog(
+            self.rect.width, self.rect.height,
+            (self.rect.width//2, self.rect.height//2),
+            headline, self.rect.height//14,
+            [["Erneut suchen", self.__starteNetzSuche]],
+            self.rect.height//10, 0.7, False,
+            onVoidClick=self.__generateImage,
+            posOffset=self.rect.topleft,
+            onSurfaceChange=self.__generateImage
+        )
+        self.__startDialogGruppe.empty()
+        self.__startDialogGruppe.add(self.__netzStatusDialog)
+        self.__generateImage()
+
+    def __waehleSingleplayer(self):
+        self.__netzAktiv = False
+        self.__startDialogGruppe.empty()
+        self.__startKlar = True
+        self.start()
+        self.__generateImage()
+
+    def __uebernehmeSpielerName(self, playerName:str):
+        playerName = playerName.strip()
+        if playerName == "":
+            if self.__nameDialog != None:
+                self.__nameDialog.setHeadline("Name darf nicht leer sein")
+            return
+        self.__spielerName = playerName
+        self.__starteMultiplayer()
+
+    def __starteMultiplayer(self):
+        self.__netzAktiv = True
+        self.__zeigeNetzStatusDialog("Suche im LAN nach Schachpartie")
+        if self.__netzListenerThread == None or not(self.__netzListenerThread.is_alive()):
+            self.__netzListenerThread = threading.Thread(target=self.__listenerWorker, daemon=True)
+            self.__netzListenerThread.start()
+        self.__starteNetzSuche()
+
+    def __starteNetzSuche(self):
+        if self.__netzVerbundenEvent.is_set():
+            return
+        if self.__netzSucheThread != None and self.__netzSucheThread.is_alive():
+            return
+        self.__netzSucheThread = threading.Thread(target=self.__discoveryWorker, daemon=True)
+        self.__netzSucheThread.start()
+
+    def __holeLokaleIp(self)->str:
+        return socket.gethostbyname(socket.gethostname())
+
+    def __listenerWorker(self):
+        listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        listener.bind(("0.0.0.0", self.__netzPort))
+        listener.listen(3)
+        while self.__netzAktiv and not(self.__netzVerbundenEvent.is_set()):
+            conn, _addr = listener.accept()
+            raw = conn.recv(2048)
+            if len(raw) == 0:
+                conn.close()
+                continue
+            msgText = raw.decode("utf-8").strip()
+            msgParts = msgText.split(";")
+            if len(msgParts) < 2 or msgParts[0] != "ASK":
+                conn.close()
+                continue
+            if self.__netzVerbundenEvent.is_set():
+                conn.sendall("BUSY\n".encode("utf-8"))
+                conn.close()
+                continue
+            conn.sendall(("OK;" + self.__spielerName + "\n").encode("utf-8"))
+            self.__setzeNetzSocket(conn, 1)
+            return
+
+    def __discoveryWorker(self):
+        localIp = self.__holeLokaleIp()
+        chunks = localIp.split(".")
+        if len(chunks) != 4:
+            self.__zeigeNetzStatusDialog("LAN-Suche fehlgeschlagen")
+            return
+        prefix = f"{chunks[0]}.{chunks[1]}.{chunks[2]}"
+        own = int(chunks[3])
+        for host in range(1, 41):
+            if not(self.__netzAktiv) or self.__netzVerbundenEvent.is_set():
+                return
+            if host == own:
+                continue
+            target = f"{prefix}.{host}"
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if sock.connect_ex((target, self.__netzPort)) != 0:
+                sock.close()
+                continue
+            sock.sendall(("ASK;" + self.__spielerName + "\n").encode("utf-8"))
+            raw = sock.recv(2048)
+            if len(raw) == 0:
+                sock.close()
+                continue
+            responseText = raw.decode("utf-8").strip()
+            if responseText.startswith("OK;"):
+                self.__setzeNetzSocket(sock, 0)
+                return
+            sock.close()
+        if not(self.__netzVerbundenEvent.is_set()):
+            self.__zeigeNetzStatusDialog("Kein Spiel gefunden, warte auf Anfrage")
+
+    def __setzeNetzSocket(self, sock:socket.socket, localTeam:int):
+        if self.__netzVerbundenEvent.is_set():
+            sock.close()
+            return
+        self.__netzSock = sock
+        self.__meinTeam = localTeam
+        self.__netzVerbundenEvent.set()
+        self.__startDialogGruppe.empty()
+        self.__startKlar = True
+        self.start()
+        self.__starteNetzEmpfang()
+        self.__generateImage()
+
+    def __starteNetzEmpfang(self):
+        if self.__netzEmpfangThread != None and self.__netzEmpfangThread.is_alive():
+            return
+        self.__netzEmpfangThread = threading.Thread(target=self.__receiverWorker, daemon=True)
+        self.__netzEmpfangThread.start()
+
+    def __receiverWorker(self):
+        while self.__netzAktiv and self.__netzVerbundenEvent.is_set():
+            if self.__netzSock == None:
+                return
+            raw = self.__netzSock.recv(4096)
+            if len(raw) == 0:
+                return
+            self.__netzBuffer += raw.decode("utf-8")
+            while "\n" in self.__netzBuffer:
+                line, self.__netzBuffer = self.__netzBuffer.split("\n", 1)
+                line = line.strip()
+                if line == "":
+                    continue
+                parts = line.split(";")
+                if len(parts) >= 3 and parts[0] == "MOVE":
+                    self.__setzeRemoteZug(parts[1], parts[2])
+                    continue
+                if len(parts) >= 3 and parts[0] == "PROMO":
+                    self.__setzeRemotePromo(parts[1], parts[2])
+
+    def __sendeNetzMessage(self, text:str):
+        if not(self.__netzAktiv) or not(self.__netzVerbundenEvent.is_set()):
+            return
+        if self.__netzSock == None:
+            return
+        self.__netzSock.sendall((text + "\n").encode("utf-8"))
+
+    def __setzeRemoteZug(self, startLabel:str, targetLabel:str):
+        startField = self.__fields.get(startLabel)
+        targetField = self.__fields.get(targetLabel)
+        if type(startField) != Feld or type(targetField) != Feld:
+            return
+        self.__wendeRemoteZugAn = True
+        self.__eventMode = "chooseFigure"
+        self.__chooseFigureEvent(startField)
+        self.__setFigureEvent(targetField)
+        self.__wendeRemoteZugAn = False
+        self.__generateImage()
+
+    def __setzeRemotePromo(self, fieldLabel:str, pieceName:str):
+        field = self.__fields.get(fieldLabel)
+        if type(field) != Feld:
+            return
+        figure = field.getFigure()
+        if type(figure) != Bauer:
+            return
+        if pieceName == "TURM":
+            if figure.getTeam() == 0:
+                field.setFigure(self.__whiteTower)
+            else:
+                field.setFigure(self.__blackTower)
+        elif pieceName == "LAEUFER":
+            if figure.getTeam() == 0:
+                field.setFigure(self.__whiteBishop)
+            else:
+                field.setFigure(self.__blackBishop)
+        elif pieceName == "SPRINGER":
+            if figure.getTeam() == 0:
+                field.setFigure(self.__whiteKnight)
+            else:
+                field.setFigure(self.__blackKnight)
+        elif pieceName == "DAME":
+            if figure.getTeam() == 0:
+                field.setFigure(self.__whiteQueen)
+            else:
+                field.setFigure(self.__blackQueen)
+        else:
+            return
+        self.__generateImage()
+
 
     
     def restartGame(self):
         self.__reset_game_state()
+        if self.__netzAktiv:
+            self.__startKlar = True
         self.start()
     
     def getFieldRow(self, RowNumber:int)->list[Feld]:
@@ -99,6 +353,8 @@ class Brett(pygame.sprite.Sprite):
     def start(self)->None:
         if self.__running:
             raise Exception("Bereits gestartet!")
+        if not(self.__startKlar):
+            return
         self.__running = True
         self.__eventMode = "chooseFigure"
 
@@ -217,6 +473,8 @@ class Brett(pygame.sprite.Sprite):
         self.image.fill("black")
         fieldsGroup = self.__getFieldsGroup()
         fieldsGroup.draw(self.image)
+        if len(self.__startDialogGruppe.sprites()) != 0:
+            self.__startDialogGruppe.draw(self.image)
         if self.__resignDialog.getIfShown():
             print("true")
             self.__DialogGroup.draw(self.image)
@@ -226,12 +484,23 @@ class Brett(pygame.sprite.Sprite):
         
         
     def update(self) -> None:
-        pass
+        if self.__nameDialog != None:
+            self.__nameDialog.update()
 
     def __CheckIfIsNotAFeldInstance(self, testObject:object) ->bool:
         return type(testObject) != Feld
     
     def handleLeftClickEvent(self, pos:tuple[int, int])->None:
+        if self.__modusDialog != None and self.__modusDialog.getIfShown():
+            self.__modusDialog.handleLeftClick(pos)
+            return
+        if self.__nameDialog != None and self.__nameDialog.getIfShown():
+            self.__nameDialog.handleLeftClick(pos)
+            return
+        if self.__netzStatusDialog != None and self.__netzStatusDialog.getIfShown() and not(self.__netzVerbundenEvent.is_set()):
+            self.__netzStatusDialog.handleLeftClick(pos)
+            return
+
         if self.__resignDialog.getIfShown():
             self.__resignDialog.handleLeftClick(pos)
             return
@@ -244,6 +513,9 @@ class Brett(pygame.sprite.Sprite):
                 PromoteDialog.handleLeftClick(pos)
                 return
         if not(self.__running):
+            return
+
+        if self.__netzAktiv and self.__onTurnTeam != self.__meinTeam:
             return
         
         clickedField = self.getFieldByCords(pos)
@@ -268,9 +540,15 @@ class Brett(pygame.sprite.Sprite):
         print(f"Didn't found the Event for the current EventMode: {self.__eventMode}")
 
     def handleRightClickEvent(self, pos:tuple[int, int])->None:
+        if not(self.__startKlar):
+            return
         if not(self.__resignDialog.getIfShown()):
             self.__resignDialog.showSurface()
             self.__generateImage()
+
+    def handleKeyDownEvent(self, event:pygame.event.Event)->None:
+        if self.__nameDialog != None and self.__nameDialog.getIfShown():
+            self.__nameDialog.handleKeyDown(event)
 
     def __resetCursorAndSetEventMode(self, eventMode:str):
         self.__cursor = None
@@ -331,6 +609,9 @@ class Brett(pygame.sprite.Sprite):
                         elif matchingTurnData["killMaybeFigureMustHadDoubleWalkLastTurn"] and killMaybeFigure.hasDidDoubleWalkInTurn(self.__turnNumber-1):
                             killMaybeFigureField.setFigure(None)
 
+        startLabel = self.__cursor.getLabel()
+        targetLabel = clickedField.getLabel()
+
         clickedField.setFigure(beforeCursorFigur)
         self.__cursor.setFigure(None)
 
@@ -344,20 +625,22 @@ class Brett(pygame.sprite.Sprite):
 
         beforeCursorFigur.moved()
         self.__finishTurn()
+        if self.__netzAktiv and not(self.__wendeRemoteZugAn):
+            self.__sendeNetzMessage(f"MOVE;{startLabel};{targetLabel}")
     
     def __promoteTower(self):
-        self.__doPromote(self.__whiteTower, self.__blackTower)
+        self.__doPromote(self.__whiteTower, self.__blackTower, "TURM")
     
     def __promoteBishop(self):
-        self.__doPromote(self.__whiteBishop, self.__blackBishop)
+        self.__doPromote(self.__whiteBishop, self.__blackBishop, "LAEUFER")
     
     def __promoteKnight(self):
-        self.__doPromote(self.__whiteKnight, self.__blackKnight)
+        self.__doPromote(self.__whiteKnight, self.__blackKnight, "SPRINGER")
 
     def __promoteQueen(self):
-        self.__doPromote(self.__whiteQueen, self.__blackQueen)
+        self.__doPromote(self.__whiteQueen, self.__blackQueen, "DAME")
 
-    def __doPromote(self, Team0Figure, Team1Figure):
+    def __doPromote(self, Team0Figure, Team1Figure, promotionName:str):
         promoteData = self.__PawnPromotes[-1]
         promoteField:Feld = self.__fields[promoteData["Label"]]
         promoteDialog:Dialog = promoteData["Dialog"]
@@ -368,12 +651,16 @@ class Brett(pygame.sprite.Sprite):
         promoteDialog.hideSurface()
         promoteDialog.kill()
         self.__PawnPromotes.pop(-1)
+        if self.__netzAktiv and not(self.__wendeRemoteZugAn):
+            self.__sendeNetzMessage(f"PROMO;{promoteField.getLabel()};{promotionName}")
 
     def __finishTurn(self):
         for row in [1, 8]:
             for field in self.getFieldRow(row):
                 if type(field.getFigure()) == Bauer:
                     print("DETECT PROMOTE PAWN" + field.getLabel())
+                    if self.__netzAktiv and self.__wendeRemoteZugAn:
+                        continue
                     PromoteInfos = {}
                     PromoteInfos["Dialog"] = Dialog(
                         self.rect.width, self.rect.height, 
@@ -865,7 +1152,6 @@ if __name__ == "__main__":
 
     TestBrettGroup = pygame.sprite.GroupSingle()
     Spielbrett = Brett(800, (1920/2-400, 1080/2-400), "white", "black")
-    Spielbrett.start()
     TestBrettGroup.add(Spielbrett)
 
     
@@ -876,6 +1162,8 @@ if __name__ == "__main__":
                 pygame.quit()
                 exit()
                 continue
+            if event.type == pygame.KEYDOWN:
+                Spielbrett.handleKeyDownEvent(event)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     startClick = time()
