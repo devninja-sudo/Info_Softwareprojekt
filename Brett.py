@@ -86,6 +86,7 @@ class Brett(pygame.sprite.Sprite):
         self.__wendeRemoteZugAn:bool = False
         self.__modusDialog:Dialog|None = None
         self.__nameDialog:TextInputDialog|None = None
+        self.__ipDialog:TextInputDialog|None = None
         self.__netzStatusDialog:Dialog|None = None
         self.__startDialogGruppe = pygame.sprite.Group()
 
@@ -152,7 +153,7 @@ class Brett(pygame.sprite.Sprite):
             self.rect.width, self.rect.height,
             (self.rect.width//2, self.rect.height//2),
             headline, self.rect.height//14,
-            [["Erneut suchen", self.__starteNetzSuche]],
+            [["Erneut suchen", self.__starteNetzSuche], ["IP eingeben", self.__zeigeIpDialog]],
             self.rect.height//10, 0.7, False,
             onVoidClick=self.__generateImage,
             posOffset=self.rect.topleft,
@@ -161,6 +162,69 @@ class Brett(pygame.sprite.Sprite):
         self.__startDialogGruppe.empty()
         self.__startDialogGruppe.add(self.__netzStatusDialog)
         self.__generateImage()
+
+    def __zeigeIpDialog(self):
+        self.__ipDialog = TextInputDialog(
+            self.rect.width, self.rect.height,
+            (self.rect.width//2, self.rect.height//2),
+            "IP eingeben", self.rect.height//10,
+            self.rect.height//10,
+            "Verbinden", self.rect.height//10,
+            False,
+            onSubmit=self.__verbindeMitIpText,
+            onVoidClick=self.__generateImage,
+            posOffset=self.rect.topleft,
+            onSurfaceChange=self.__generateImage,
+            maxInputLength=15
+        )
+        self.__startDialogGruppe.empty()
+        self.__startDialogGruppe.add(self.__ipDialog)
+        self.__generateImage()
+
+    def __istIPv4Gueltig(self, ipText:str)->bool:
+        teile = ipText.split(".")
+        if len(teile) != 4:
+            return False
+        for teil in teile:
+            if teil == "":
+                return False
+            if not(teil.isdigit()):
+                return False
+            wert = int(teil)
+            if wert < 0 or wert > 255:
+                return False
+        return True
+
+    def __verbindeMitIpText(self, ipText:str):
+        ipText = ipText.strip()
+        if not(self.__istIPv4Gueltig(ipText)):
+            if self.__ipDialog != None:
+                self.__ipDialog.setHeadline("IP ungueltig")
+            return
+        if self.__netzVerbundenEvent.is_set():
+            return
+        connectThread = threading.Thread(target=self.__direktConnectWorker, args=(ipText,), daemon=True)
+        connectThread.start()
+
+    def __direktConnectWorker(self, targetIp:str):
+        self.__zeigeNetzStatusDialog("Verbinde mit " + targetIp)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if sock.connect_ex((targetIp, self.__netzPort)) != 0:
+            sock.close()
+            self.__zeigeNetzStatusDialog("IP nicht erreichbar")
+            return
+        sock.sendall(("ASK;" + self.__spielerName + "\n").encode("utf-8"))
+        raw = sock.recv(2048)
+        if len(raw) == 0:
+            sock.close()
+            self.__zeigeNetzStatusDialog("Keine Antwort von IP")
+            return
+        responseText = raw.decode("utf-8").strip()
+        if responseText.startswith("OK;"):
+            self.__setzeNetzSocket(sock, 0)
+            return
+        sock.close()
+        self.__zeigeNetzStatusDialog("Handshake fehlgeschlagen")
 
     def __waehleSingleplayer(self):
         '''
@@ -241,13 +305,16 @@ class Brett(pygame.sprite.Sprite):
         listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         listener.bind(("0.0.0.0", self.__netzPort))
         listener.listen(3)
+        print("Listener aktiv auf Port", self.__netzPort)
         while self.__netzAktiv and not(self.__netzVerbundenEvent.is_set()):
             conn, _addr = listener.accept()
+            print("Eingehende Verbindung von", _addr)
             raw = conn.recv(2048)
             if len(raw) == 0:
                 conn.close()
                 continue
             msgText = raw.decode("utf-8").strip()
+            print("Empfangen:", msgText)
             msgParts = msgText.split(";")
             if len(msgParts) < 2 or msgParts[0] != "ASK":
                 conn.close()
@@ -257,6 +324,7 @@ class Brett(pygame.sprite.Sprite):
                 conn.close()
                 continue
             conn.sendall(("OK;" + self.__spielerName + "\n").encode("utf-8"))
+            print("Antwort gesendet: OK;" + self.__spielerName)
             self.__setzeNetzSocket(conn, 1)
             return
 
@@ -273,6 +341,7 @@ class Brett(pygame.sprite.Sprite):
             return
         prefix = f"{chunks[0]}.{chunks[1]}.{chunks[2]}"
         own = int(chunks[3])
+        print("Starte Suche in", prefix + ".1-254", "eigene IP-Endung:", own)
         for host in range(1, 255):
             if not(self.__netzAktiv) or self.__netzVerbundenEvent.is_set():
                 return
@@ -283,17 +352,21 @@ class Brett(pygame.sprite.Sprite):
             if sock.connect_ex((target, self.__netzPort)) != 0:
                 sock.close()
                 continue
+            print("Port offen auf", target)
             sock.sendall(("ASK;" + self.__spielerName + "\n").encode("utf-8"))
+            print("Gesendet an", target, ": ASK;" + self.__spielerName)
             raw = sock.recv(2048)
             if len(raw) == 0:
                 sock.close()
                 continue
             responseText = raw.decode("utf-8").strip()
+            print("Antwort von", target, ":", responseText)
             if responseText.startswith("OK;"):
                 self.__setzeNetzSocket(sock, 0)
                 return
             sock.close()
         if not(self.__netzVerbundenEvent.is_set()):
+            print("Suche fertig, kein Spiel gefunden")
             self.__zeigeNetzStatusDialog("Kein Spiel gefunden, warte auf Anfrage")
 
     def __setzeNetzSocket(self, sock:socket.socket, localTeam:int):
@@ -309,10 +382,13 @@ class Brett(pygame.sprite.Sprite):
         self.__netzSock = sock
         self.__meinTeam = localTeam
         self.__netzVerbundenEvent.set()
+        print("Verbindung hergestellt. Eigenes Team:", localTeam)
         if self.__modusDialog != None:
             self.__modusDialog.hideSurface()
         if self.__nameDialog != None:
             self.__nameDialog.hideSurface()
+        if self.__ipDialog != None:
+            self.__ipDialog.hideSurface()
         if self.__netzStatusDialog != None:
             self.__netzStatusDialog.hideSurface()
         self.__startDialogGruppe.empty()
@@ -709,6 +785,8 @@ class Brett(pygame.sprite.Sprite):
         '''
         if self.__nameDialog != None:
             self.__nameDialog.update()
+        if self.__ipDialog != None:
+            self.__ipDialog.update()
 
     def __CheckIfIsNotAFeldInstance(self, testObject:object) ->bool:
         '''
@@ -730,6 +808,9 @@ class Brett(pygame.sprite.Sprite):
             return
         if self.__nameDialog != None and self.__nameDialog.getIfShown() and self.__nameDialog in self.__startDialogGruppe:
             self.__nameDialog.handleLeftClick(pos)
+            return
+        if self.__ipDialog != None and self.__ipDialog.getIfShown() and self.__ipDialog in self.__startDialogGruppe:
+            self.__ipDialog.handleLeftClick(pos)
             return
         if self.__netzStatusDialog != None and self.__netzStatusDialog.getIfShown() and self.__netzStatusDialog in self.__startDialogGruppe and not(self.__netzVerbundenEvent.is_set()):
             self.__netzStatusDialog.handleLeftClick(pos)
@@ -793,6 +874,8 @@ class Brett(pygame.sprite.Sprite):
         '''
         if self.__nameDialog != None and self.__nameDialog.getIfShown():
             self.__nameDialog.handleKeyDown(event)
+        if self.__ipDialog != None and self.__ipDialog.getIfShown():
+            self.__ipDialog.handleKeyDown(event)
 
     def __resetCursorAndSetEventMode(self, eventMode:str):
         '''
