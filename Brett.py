@@ -267,7 +267,7 @@ class Brett(pygame.sprite.Sprite):
             return
         prefix = f"{chunks[0]}.{chunks[1]}.{chunks[2]}"
         own = int(chunks[3])
-        for host in range(1, 41):
+        for host in range(1, 255):
             if not(self.__netzAktiv) or self.__netzVerbundenEvent.is_set():
                 return
             if host == own:
