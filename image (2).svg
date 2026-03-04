@@ -1,0 +1,469 @@
+<svg width="10897pt" height="2900pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events" style="overflow: hidden; "><g id="viewport-20260304114452262" class="svg-pan-zoom_viewport" transform="matrix(0.15498387149155798,0,0,0.15498387149155798,79.47656579870791,45.91014207193954)" style="transform: matrix(0.154984, 0, 0, 0.154984, 79.4766, 45.9101);">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 2895.6)">
+<title>classes_alle</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-2895.6 10892.53,-2895.6 10892.53,4 -4,4"></polygon>
+<!-- Bauer.Bauer -->
+<g id="node1" class="node">
+<title>Bauer.Bauer</title>
+<polygon fill="none" stroke="black" points="0,-244.1 0,-385.7 673.48,-385.7 673.48,-244.1 0,-244.1"></polygon>
+<text text-anchor="start" x="320.03" y="-369.1" font-family="Times,serif" font-size="14.00">Bauer</text>
+<polyline fill="none" stroke="black" points="0,-360.9 673.48,-360.9"></polyline>
+<text text-anchor="start" x="248.86" y="-344.3" font-family="Times,serif" font-size="14.00">__didDoubleWalkInTurns : list</text>
+<text text-anchor="start" x="248.86" y="-327.5" font-family="Times,serif" font-size="14.00">__mustKill : bool</text>
+<polyline fill="none" stroke="black" points="0,-319.3 673.48,-319.3"></polyline>
+<text text-anchor="start" x="8" y="-302.7" font-family="Times,serif" font-size="14.00">__init__(image: str, size: int, field_length: int, field_count: int, fieldLabelStartLetter: str, teamID: int, mustKill: bool)</text>
+<text text-anchor="start" x="8" y="-285.9" font-family="Times,serif" font-size="14.00">didDoubleWalk(TurnNumber: int): None</text>
+<text text-anchor="start" x="8" y="-269.1" font-family="Times,serif" font-size="14.00">getMaybePossibleTurns(originFieldLabel: str): list[dict]</text>
+<text text-anchor="start" x="8" y="-252.3" font-family="Times,serif" font-size="14.00">hasDidDoubleWalkInTurn(testTurnNumber: int): bool</text>
+</g>
+<!-- Brett.Brett -->
+<g id="node2" class="node">
+<title>Brett.Brett</title>
+<polygon fill="none" stroke="black" points="3847.69,-683.1 3847.69,-2891.1 4697.79,-2891.1 4697.79,-683.1 3847.69,-683.1"></polygon>
+<text text-anchor="start" x="4258.74" y="-2874.5" font-family="Times,serif" font-size="14.00">Brett</text>
+<polyline fill="none" stroke="black" points="3847.69,-2866.3 4697.79,-2866.3"></polyline>
+<text text-anchor="start" x="4135.09" y="-2849.7" font-family="Times,serif" font-size="14.00">__DialogGroup</text>
+<text text-anchor="start" x="4135.09" y="-2832.9" font-family="Times,serif" font-size="14.00">__FigureScale : float</text>
+<text text-anchor="start" x="4135.09" y="-2816.1" font-family="Times,serif" font-size="14.00">__PawnPromotes : list</text>
+<text text-anchor="start" x="4135.09" y="-2799.3" font-family="Times,serif" font-size="14.00">__blackBishop</text>
+<text text-anchor="start" x="4135.09" y="-2782.5" font-family="Times,serif" font-size="14.00">__blackKing</text>
+<text text-anchor="start" x="4135.09" y="-2765.7" font-family="Times,serif" font-size="14.00">__blackKnight</text>
+<text text-anchor="start" x="4135.09" y="-2748.9" font-family="Times,serif" font-size="14.00">__blackQueen</text>
+<text text-anchor="start" x="4135.09" y="-2732.1" font-family="Times,serif" font-size="14.00">__blackTower</text>
+<text text-anchor="start" x="4135.09" y="-2715.3" font-family="Times,serif" font-size="14.00">__cursor : NoneType</text>
+<text text-anchor="start" x="4135.09" y="-2698.5" font-family="Times,serif" font-size="14.00">__edge_length : int</text>
+<text text-anchor="start" x="4135.09" y="-2681.7" font-family="Times,serif" font-size="14.00">__eventMode : str | None</text>
+<text text-anchor="start" x="4135.09" y="-2664.9" font-family="Times,serif" font-size="14.00">__field_color_1 : str</text>
+<text text-anchor="start" x="4135.09" y="-2648.1" font-family="Times,serif" font-size="14.00">__field_color_2 : str</text>
+<text text-anchor="start" x="4135.09" y="-2631.3" font-family="Times,serif" font-size="14.00">__field_label_start_letter : str</text>
+<text text-anchor="start" x="4135.09" y="-2614.5" font-family="Times,serif" font-size="14.00">__field_length : int</text>
+<text text-anchor="start" x="4135.09" y="-2597.7" font-family="Times,serif" font-size="14.00">__fields : dict[str:Feld]</text>
+<text text-anchor="start" x="4135.09" y="-2580.9" font-family="Times,serif" font-size="14.00">__fieldsGroup</text>
+<text text-anchor="start" x="4135.09" y="-2564.1" font-family="Times,serif" font-size="14.00">__fields_count : int</text>
+<text text-anchor="start" x="4135.09" y="-2547.3" font-family="Times,serif" font-size="14.00">__ipDialog : TextInputDialog | None</text>
+<text text-anchor="start" x="4135.09" y="-2530.5" font-family="Times,serif" font-size="14.00">__meinTeam : int</text>
+<text text-anchor="start" x="4135.09" y="-2513.7" font-family="Times,serif" font-size="14.00">__modusDialog : Dialog | None</text>
+<text text-anchor="start" x="4135.09" y="-2496.9" font-family="Times,serif" font-size="14.00">__nameDialog : TextInputDialog | None</text>
+<text text-anchor="start" x="4135.09" y="-2480.1" font-family="Times,serif" font-size="14.00">__netzAktiv : bool</text>
+<text text-anchor="start" x="4135.09" y="-2463.3" font-family="Times,serif" font-size="14.00">__netzBuffer : str</text>
+<text text-anchor="start" x="4135.09" y="-2446.5" font-family="Times,serif" font-size="14.00">__netzEmpfangThread : threading.Thread | None</text>
+<text text-anchor="start" x="4135.09" y="-2429.7" font-family="Times,serif" font-size="14.00">__netzListenerThread : threading.Thread | None</text>
+<text text-anchor="start" x="4135.09" y="-2412.9" font-family="Times,serif" font-size="14.00">__netzPort : int</text>
+<text text-anchor="start" x="4135.09" y="-2396.1" font-family="Times,serif" font-size="14.00">__netzSock : socket.socket | None</text>
+<text text-anchor="start" x="4135.09" y="-2379.3" font-family="Times,serif" font-size="14.00">__netzStatusDialog : Dialog | None</text>
+<text text-anchor="start" x="4135.09" y="-2362.5" font-family="Times,serif" font-size="14.00">__netzSucheThread : threading.Thread | None</text>
+<text text-anchor="start" x="4135.09" y="-2345.7" font-family="Times,serif" font-size="14.00">__netzVerbundenEvent : Event</text>
+<text text-anchor="start" x="4135.09" y="-2328.9" font-family="Times,serif" font-size="14.00">__onTurnTeam : int</text>
+<text text-anchor="start" x="4135.09" y="-2312.1" font-family="Times,serif" font-size="14.00">__ready : bool</text>
+<text text-anchor="start" x="4135.09" y="-2295.3" font-family="Times,serif" font-size="14.00">__resignDialog</text>
+<text text-anchor="start" x="4135.09" y="-2278.5" font-family="Times,serif" font-size="14.00">__rotation : int</text>
+<text text-anchor="start" x="4135.09" y="-2261.7" font-family="Times,serif" font-size="14.00">__running : bool</text>
+<text text-anchor="start" x="4135.09" y="-2244.9" font-family="Times,serif" font-size="14.00">__spielerName : str</text>
+<text text-anchor="start" x="4135.09" y="-2228.1" font-family="Times,serif" font-size="14.00">__startDialogGruppe</text>
+<text text-anchor="start" x="4135.09" y="-2211.3" font-family="Times,serif" font-size="14.00">__turnNumber : int</text>
+<text text-anchor="start" x="4135.09" y="-2194.5" font-family="Times,serif" font-size="14.00">__wendeRemoteZugAn : bool</text>
+<text text-anchor="start" x="4135.09" y="-2177.7" font-family="Times,serif" font-size="14.00">__whiteBishop</text>
+<text text-anchor="start" x="4135.09" y="-2160.9" font-family="Times,serif" font-size="14.00">__whiteKing</text>
+<text text-anchor="start" x="4135.09" y="-2144.1" font-family="Times,serif" font-size="14.00">__whiteKnight</text>
+<text text-anchor="start" x="4135.09" y="-2127.3" font-family="Times,serif" font-size="14.00">__whiteQueen</text>
+<text text-anchor="start" x="4135.09" y="-2110.5" font-family="Times,serif" font-size="14.00">__whiteTower</text>
+<text text-anchor="start" x="4135.09" y="-2093.7" font-family="Times,serif" font-size="14.00">image</text>
+<text text-anchor="start" x="4135.09" y="-2076.9" font-family="Times,serif" font-size="14.00">rect</text>
+<polyline fill="none" stroke="black" points="3847.69,-2068.7 4697.79,-2068.7"></polyline>
+<text text-anchor="start" x="3855.69" y="-2052.1" font-family="Times,serif" font-size="14.00">SetupTurnVars()</text>
+<text text-anchor="start" x="3855.69" y="-2035.3" font-family="Times,serif" font-size="14.00">__CheckIfIsNotAFeldInstance(testObject: object): bool</text>
+<text text-anchor="start" x="3855.69" y="-2018.5" font-family="Times,serif" font-size="14.00">__SpitNegativePoints(Line: list[dict], SplitNumberIndex: int): list[list, list]</text>
+<text text-anchor="start" x="3855.69" y="-2001.7" font-family="Times,serif" font-size="14.00">__buildPawnRow(RowNumber: int, scale: float, texturePath: str, teamID: int): None</text>
+<text text-anchor="start" x="3855.69" y="-1984.9" font-family="Times,serif" font-size="14.00">__checkCastlingConditions(KingField: Feld, TargetField: Feld): bool</text>
+<text text-anchor="start" x="3855.69" y="-1968.1" font-family="Times,serif" font-size="14.00">__chooseFigureEvent(clickedField: Feld): bool</text>
+<text text-anchor="start" x="3855.69" y="-1951.3" font-family="Times,serif" font-size="14.00">__clearAllFieldHighlights(): None</text>
+<text text-anchor="start" x="3855.69" y="-1934.5" font-family="Times,serif" font-size="14.00">__correctFieldPositions(): None</text>
+<text text-anchor="start" x="3855.69" y="-1917.7" font-family="Times,serif" font-size="14.00">__createFields(): dict</text>
+<text text-anchor="start" x="3855.69" y="-1900.9" font-family="Times,serif" font-size="14.00">__createFieldsGroup(): pygame.sprite.Group</text>
+<text text-anchor="start" x="3855.69" y="-1884.1" font-family="Times,serif" font-size="14.00">__cutLineAtWalkingThroughFigures(Line: list[dict], startField: Feld): list[dict] | list</text>
+<text text-anchor="start" x="3855.69" y="-1867.3" font-family="Times,serif" font-size="14.00">__direktConnectWorker(targetIp: str)</text>
+<text text-anchor="start" x="3855.69" y="-1850.5" font-family="Times,serif" font-size="14.00">__discoveryWorker()</text>
+<text text-anchor="start" x="3855.69" y="-1833.7" font-family="Times,serif" font-size="14.00">__doPromote(Team0Figure, Team1Figure, promotionName: str)</text>
+<text text-anchor="start" x="3855.69" y="-1816.9" font-family="Times,serif" font-size="14.00">__finishTurn()</text>
+<text text-anchor="start" x="3855.69" y="-1800.1" font-family="Times,serif" font-size="14.00">__generateImage(): None</text>
+<text text-anchor="start" x="3855.69" y="-1783.3" font-family="Times,serif" font-size="14.00">__getCheckedTeams(): list[int]</text>
+<text text-anchor="start" x="3855.69" y="-1766.5" font-family="Times,serif" font-size="14.00">__getClickPosByLabel(fieldLabel: str): tuple[int, int] | None</text>
+<text text-anchor="start" x="3855.69" y="-1749.7" font-family="Times,serif" font-size="14.00">__getDangerFieldsToTheField(testForField: Feld, TeamID: int | None): list[Feld]</text>
+<text text-anchor="start" x="3855.69" y="-1732.9" font-family="Times,serif" font-size="14.00">__getDangerFieldsWhenMove(targetField: Feld, OriginField: Feld): list[Feld]</text>
+<text text-anchor="start" x="3855.69" y="-1716.1" font-family="Times,serif" font-size="14.00">__getFieldLabelsPositionIDs(FieldLabel: str): list[int, int]</text>
+<text text-anchor="start" x="3855.69" y="-1699.3" font-family="Times,serif" font-size="14.00">__getFieldPositionByName(field_name: str): tuple[int, int]</text>
+<text text-anchor="start" x="3855.69" y="-1682.5" font-family="Times,serif" font-size="14.00">__getFieldsBetweenHorizontalVerticalOnly(startingField: Feld, targetField: Feld): list[Feld]</text>
+<text text-anchor="start" x="3855.69" y="-1665.7" font-family="Times,serif" font-size="14.00">__getFieldsGroup(): pygame.sprite.Group</text>
+<text text-anchor="start" x="3855.69" y="-1648.9" font-family="Times,serif" font-size="14.00">__getFieldsWithKings(): list[Feld]</text>
+<text text-anchor="start" x="3855.69" y="-1632.1" font-family="Times,serif" font-size="14.00">__getKingFieldsInDanger(): list[Feld]</text>
+<text text-anchor="start" x="3855.69" y="-1615.3" font-family="Times,serif" font-size="14.00">__getLabelByPositionIDs(PositionIDs: list[int, int]): str</text>
+<text text-anchor="start" x="3855.69" y="-1598.5" font-family="Times,serif" font-size="14.00">__getMatchingTurnData(startField: Feld, targetField: Feld): dict | None</text>
+<text text-anchor="start" x="3855.69" y="-1581.7" font-family="Times,serif" font-size="14.00">__getOnlyPointsList(TurnsDatas: list[dict]): list[tuple]</text>
+<text text-anchor="start" x="3855.69" y="-1564.9" font-family="Times,serif" font-size="14.00">__getOnlyTurnDataWithValidFields(turnsData: list[dict]): list[dict]</text>
+<text text-anchor="start" x="3855.69" y="-1548.1" font-family="Times,serif" font-size="14.00">__getPointFromDict(DataDict: dict): tuple</text>
+<text text-anchor="start" x="3855.69" y="-1531.3" font-family="Times,serif" font-size="14.00">__getTurnDataWithoutWalkThroughFigures(relativeMaybePossibleTurnsData: list[dict], startField: Feld): list | list[dict]</text>
+<text text-anchor="start" x="3855.69" y="-1514.5" font-family="Times,serif" font-size="14.00">__getTurnsNotKillingMatesFromTurnData(turnsData: list[dict], TeamID: int): list[dict]</text>
+<text text-anchor="start" x="3855.69" y="-1497.7" font-family="Times,serif" font-size="14.00">__holeLokaleIp(): str</text>
+<text text-anchor="start" x="3855.69" y="-1480.9" font-family="Times,serif" font-size="14.00">__init__(edge_length: int, topLeftCorner: tuple[int, int], field_color1: str, field_color2: str, rotation: int)</text>
+<text text-anchor="start" x="3855.69" y="-1464.1" font-family="Times,serif" font-size="14.00">__istIPv4Gueltig(ipText: str): bool</text>
+<text text-anchor="start" x="3855.69" y="-1447.3" font-family="Times,serif" font-size="14.00">__listenerWorker()</text>
+<text text-anchor="start" x="3855.69" y="-1430.5" font-family="Times,serif" font-size="14.00">__markAllPosibleFields(FigureFieldLabel: str): None</text>
+<text text-anchor="start" x="3855.69" y="-1413.7" font-family="Times,serif" font-size="14.00">__promoteBishop()</text>
+<text text-anchor="start" x="3855.69" y="-1396.9" font-family="Times,serif" font-size="14.00">__promoteKnight()</text>
+<text text-anchor="start" x="3855.69" y="-1380.1" font-family="Times,serif" font-size="14.00">__promoteQueen()</text>
+<text text-anchor="start" x="3855.69" y="-1363.3" font-family="Times,serif" font-size="14.00">__promoteTower()</text>
+<text text-anchor="start" x="3855.69" y="-1346.5" font-family="Times,serif" font-size="14.00">__receiverWorker()</text>
+<text text-anchor="start" x="3855.69" y="-1329.7" font-family="Times,serif" font-size="14.00">__resetCursorAndSetEventMode(eventMode: str)</text>
+<text text-anchor="start" x="3855.69" y="-1312.9" font-family="Times,serif" font-size="14.00">__reset_game_state()</text>
+<text text-anchor="start" x="3855.69" y="-1296.1" font-family="Times,serif" font-size="14.00">__reverseFirstPart(Line: list): list</text>
+<text text-anchor="start" x="3855.69" y="-1279.3" font-family="Times,serif" font-size="14.00">__rotatePoint90degree(point: tuple[int, int]): tuple[int, int]</text>
+<text text-anchor="start" x="3855.69" y="-1262.5" font-family="Times,serif" font-size="14.00">__sendeNetzMessage(text: str)</text>
+<text text-anchor="start" x="3855.69" y="-1245.7" font-family="Times,serif" font-size="14.00">__setFigureEvent(clickedField: Feld): None</text>
+<text text-anchor="start" x="3855.69" y="-1228.9" font-family="Times,serif" font-size="14.00">__setupBrett(): None</text>
+<text text-anchor="start" x="3855.69" y="-1212.1" font-family="Times,serif" font-size="14.00">__setupNetzwerkVars()</text>
+<text text-anchor="start" x="3855.69" y="-1195.3" font-family="Times,serif" font-size="14.00">__setupStartDialogs()</text>
+<text text-anchor="start" x="3855.69" y="-1178.5" font-family="Times,serif" font-size="14.00">__setzeNetzSocket(sock: socket.socket, localTeam: int)</text>
+<text text-anchor="start" x="3855.69" y="-1161.7" font-family="Times,serif" font-size="14.00">__setzeRemotePromo(fieldLabel: str, pieceName: str)</text>
+<text text-anchor="start" x="3855.69" y="-1144.9" font-family="Times,serif" font-size="14.00">__setzeRemoteZug(startLabel: str, targetLabel: str)</text>
+<text text-anchor="start" x="3855.69" y="-1128.1" font-family="Times,serif" font-size="14.00">__sortToDestination(Line: list[dict], sortIndex: int): list[list[dict]]</text>
+<text text-anchor="start" x="3855.69" y="-1111.3" font-family="Times,serif" font-size="14.00">__starteMultiplayer()</text>
+<text text-anchor="start" x="3855.69" y="-1094.5" font-family="Times,serif" font-size="14.00">__starteNetzEmpfang()</text>
+<text text-anchor="start" x="3855.69" y="-1077.7" font-family="Times,serif" font-size="14.00">__starteNetzSuche()</text>
+<text text-anchor="start" x="3855.69" y="-1060.9" font-family="Times,serif" font-size="14.00">__switchToOtherPlayer(): None</text>
+<text text-anchor="start" x="3855.69" y="-1044.1" font-family="Times,serif" font-size="14.00">__uebernehmeSpielerName(playerName: str)</text>
+<text text-anchor="start" x="3855.69" y="-1027.3" font-family="Times,serif" font-size="14.00">__verbindeMitIpText(ipText: str)</text>
+<text text-anchor="start" x="3855.69" y="-1010.5" font-family="Times,serif" font-size="14.00">__waehleSingleplayer()</text>
+<text text-anchor="start" x="3855.69" y="-993.7" font-family="Times,serif" font-size="14.00">__zeigeIpDialog()</text>
+<text text-anchor="start" x="3855.69" y="-976.9" font-family="Times,serif" font-size="14.00">__zeigeNameDialog()</text>
+<text text-anchor="start" x="3855.69" y="-960.1" font-family="Times,serif" font-size="14.00">__zeigeNetzStatusDialog(headline: str)</text>
+<text text-anchor="start" x="3855.69" y="-943.3" font-family="Times,serif" font-size="14.00">checkIfMate(): list[int]</text>
+<text text-anchor="start" x="3855.69" y="-926.5" font-family="Times,serif" font-size="14.00">checkIfTeamCanMove(team: int)</text>
+<text text-anchor="start" x="3855.69" y="-909.7" font-family="Times,serif" font-size="14.00">getFieldByCords(pos: tuple[int, int]): Feld | None</text>
+<text text-anchor="start" x="3855.69" y="-892.9" font-family="Times,serif" font-size="14.00">getFieldRow(RowNumber: int): list[Feld]</text>
+<text text-anchor="start" x="3855.69" y="-876.1" font-family="Times,serif" font-size="14.00">getPossibleTurnFields(Field: Feld, ignoreChecksOrAnxiety: bool, ignoreBuildingChecks: bool, ignoreCastling: bool): list[Feld]</text>
+<text text-anchor="start" x="3855.69" y="-859.3" font-family="Times,serif" font-size="14.00">getPossibleTurnFieldsFullData(startingPointField: Feld, ignoreChecksOrAnxiety: bool, ignoreBuildingChecks: bool, ignoreCastling: bool): list[dict]</text>
+<text text-anchor="start" x="3855.69" y="-842.5" font-family="Times,serif" font-size="14.00">getRelativeField(fieldLabel: str, relativeField: tuple[int, int]): Feld | None</text>
+<text text-anchor="start" x="3855.69" y="-825.7" font-family="Times,serif" font-size="14.00">getRotation(): int</text>
+<text text-anchor="start" x="3855.69" y="-808.9" font-family="Times,serif" font-size="14.00">handleKeyDownEvent(event: pygame.event.Event): None</text>
+<text text-anchor="start" x="3855.69" y="-792.1" font-family="Times,serif" font-size="14.00">handleLeftClickEvent(pos: tuple[int, int]): None</text>
+<text text-anchor="start" x="3855.69" y="-775.3" font-family="Times,serif" font-size="14.00">handleRightClickEvent(pos: tuple[int, int]): None</text>
+<text text-anchor="start" x="3855.69" y="-758.5" font-family="Times,serif" font-size="14.00">restartGame()</text>
+<text text-anchor="start" x="3855.69" y="-741.7" font-family="Times,serif" font-size="14.00">setRotation(rotation: int): None</text>
+<text text-anchor="start" x="3855.69" y="-724.9" font-family="Times,serif" font-size="14.00">setupDialogGroup()</text>
+<text text-anchor="start" x="3855.69" y="-708.1" font-family="Times,serif" font-size="14.00">start(): None</text>
+<text text-anchor="start" x="3855.69" y="-691.3" font-family="Times,serif" font-size="14.00">update(): None</text>
+</g>
+<!-- Dame.Dame -->
+<g id="node3" class="node">
+<title>Dame.Dame</title>
+<polygon fill="none" stroke="black" points="691,-269.3 691,-360.5 1364.48,-360.5 1364.48,-269.3 691,-269.3"></polygon>
+<text text-anchor="start" x="1011.03" y="-343.9" font-family="Times,serif" font-size="14.00">Dame</text>
+<polyline fill="none" stroke="black" points="691,-335.7 1364.48,-335.7"></polyline>
+<text text-anchor="start" x="978.35" y="-319.1" font-family="Times,serif" font-size="14.00">__mustKill : bool</text>
+<polyline fill="none" stroke="black" points="691,-310.9 1364.48,-310.9"></polyline>
+<text text-anchor="start" x="699" y="-294.3" font-family="Times,serif" font-size="14.00">__init__(image: str, size: int, field_length: int, field_count: int, fieldLabelStartLetter: str, teamID: int, mustKill: bool)</text>
+<text text-anchor="start" x="699" y="-277.5" font-family="Times,serif" font-size="14.00">getMaybePossibleTurns(originFieldLabel: str): list[dict]</text>
+</g>
+<!-- Dame.Dame&#45;&gt;Brett.Brett -->
+<g id="edge1" class="edge">
+<title>Dame.Dame-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M1067.37,-360.92C1127.81,-427.33 1249.22,-552.05 1373.74,-629.8 2181.51,-1134.16 3246.48,-1490.98 3834.82,-1665.14"></path>
+<polygon fill="black" stroke="black" points="3834.96,-1665.18 3841.84,-1663.04 3846.46,-1668.58 3839.58,-1670.72 3834.96,-1665.18"></polygon>
+<text text-anchor="middle" x="1450.17" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__blackQueen</text>
+</g>
+<!-- Dame.Dame&#45;&gt;Brett.Brett -->
+<g id="edge2" class="edge">
+<title>Dame.Dame-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M1062.21,-360.98C1118.8,-431.35 1238.68,-565.85 1373.74,-629.8 1422.88,-653.07 1442.32,-633.39 1494.74,-647.8 2351.16,-883.24 3298.36,-1309.62 3835.99,-1568.41"></path>
+<polygon fill="black" stroke="black" points="3835.81,-1568.33 3842.95,-1567.33 3846.62,-1573.53 3839.48,-1574.53 3835.81,-1568.33"></polygon>
+<text text-anchor="middle" x="1535.56" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__whiteQueen</text>
+</g>
+<!-- Dialog.Dialog -->
+<g id="node4" class="node">
+<title>Dialog.Dialog</title>
+<polygon fill="none" stroke="black" points="1382.81,-76.1 1382.81,-553.7 3030.67,-553.7 3030.67,-76.1 1382.81,-76.1"></polygon>
+<text text-anchor="start" x="2187.69" y="-537.1" font-family="Times,serif" font-size="14.00">Dialog</text>
+<polyline fill="none" stroke="black" points="1382.81,-528.9 3030.67,-528.9"></polyline>
+<text text-anchor="start" x="2092.05" y="-512.3" font-family="Times,serif" font-size="14.00">__answerDistanceSize : int</text>
+<text text-anchor="start" x="2092.05" y="-495.5" font-family="Times,serif" font-size="14.00">__answerSize : int</text>
+<text text-anchor="start" x="2092.05" y="-478.7" font-family="Times,serif" font-size="14.00">__answers : list[list[str, Callable]]</text>
+<text text-anchor="start" x="2092.05" y="-461.9" font-family="Times,serif" font-size="14.00">__answersDataWithSurface : list[dict]</text>
+<text text-anchor="start" x="2092.05" y="-445.1" font-family="Times,serif" font-size="14.00">__centerPosition : tuple[int]</text>
+<text text-anchor="start" x="2092.05" y="-428.3" font-family="Times,serif" font-size="14.00">__closeable : bool</text>
+<text text-anchor="start" x="2092.05" y="-411.5" font-family="Times,serif" font-size="14.00">__headline : str</text>
+<text text-anchor="start" x="2092.05" y="-394.7" font-family="Times,serif" font-size="14.00">__headlineSize : int</text>
+<text text-anchor="start" x="2092.05" y="-377.9" font-family="Times,serif" font-size="14.00">__height : int</text>
+<text text-anchor="start" x="2092.05" y="-361.1" font-family="Times,serif" font-size="14.00">__initPhase : bool</text>
+<text text-anchor="start" x="2092.05" y="-344.3" font-family="Times,serif" font-size="14.00">__isShown : bool</text>
+<text text-anchor="start" x="2092.05" y="-327.5" font-family="Times,serif" font-size="14.00">__onSurfaceChange : Optional[Callable]</text>
+<text text-anchor="start" x="2092.05" y="-310.7" font-family="Times,serif" font-size="14.00">__onVoidClick : Callable | None</text>
+<text text-anchor="start" x="2092.05" y="-293.9" font-family="Times,serif" font-size="14.00">__posOffset : tuple[int, int]</text>
+<text text-anchor="start" x="2092.05" y="-277.1" font-family="Times,serif" font-size="14.00">__width : int</text>
+<text text-anchor="start" x="2092.05" y="-260.3" font-family="Times,serif" font-size="14.00">image</text>
+<text text-anchor="start" x="2092.05" y="-243.5" font-family="Times,serif" font-size="14.00">questionTextSurface</text>
+<text text-anchor="start" x="2092.05" y="-226.7" font-family="Times,serif" font-size="14.00">rect</text>
+<polyline fill="none" stroke="black" points="1382.81,-218.5 3030.67,-218.5"></polyline>
+<text text-anchor="start" x="1390.81" y="-201.9" font-family="Times,serif" font-size="14.00">__CallOnSurfaceChange()</text>
+<text text-anchor="start" x="1390.81" y="-185.1" font-family="Times,serif" font-size="14.00">__init__(DialogWidth: int, DialogHeight: int, centerPosition: tuple[int], headline: str, headlineSize: int, answers: list[list[str, Callable]], answerSize: int, answerDistanceSize: float, closeable: bool, onVoidClick: Callable | None, posOffset: tuple[int, int], onSurfaceChange: Optional[Callable])</text>
+<text text-anchor="start" x="1390.81" y="-168.3" font-family="Times,serif" font-size="14.00">createSelfAnswersSurfaceData()</text>
+<text text-anchor="start" x="1390.81" y="-151.5" font-family="Times,serif" font-size="14.00">getIfShown()</text>
+<text text-anchor="start" x="1390.81" y="-134.7" font-family="Times,serif" font-size="14.00">handleLeftClick(pos: tuple[int, int])</text>
+<text text-anchor="start" x="1390.81" y="-117.9" font-family="Times,serif" font-size="14.00">hideSurface()</text>
+<text text-anchor="start" x="1390.81" y="-101.1" font-family="Times,serif" font-size="14.00">makeSurface()</text>
+<text text-anchor="start" x="1390.81" y="-84.3" font-family="Times,serif" font-size="14.00">showSurface()</text>
+</g>
+<!-- Dialog.Dialog&#45;&gt;Brett.Brett -->
+<g id="edge3" class="edge">
+<title>Dialog.Dialog-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M2306.28,-553.84C2329.06,-593.43 2355.74,-632.12 2386.3,-664.6 2798.46,-1102.63 3419.61,-1426.89 3835.29,-1611.13"></path>
+<polygon fill="black" stroke="black" points="3835.42,-1611.19 3842.52,-1609.96 3846.39,-1616.04 3839.29,-1617.27 3835.42,-1611.19"></polygon>
+<text text-anchor="middle" x="2431.46" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__modusDialog</text>
+</g>
+<!-- Dialog.Dialog&#45;&gt;Brett.Brett -->
+<g id="edge4" class="edge">
+<title>Dialog.Dialog-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M2541.55,-554.16C2894.05,-805 3450.44,-1200.94 3836.94,-1475.98"></path>
+<polygon fill="black" stroke="black" points="3836.96,-1475.99 3844.16,-1476.21 3846.73,-1482.95 3839.53,-1482.73 3836.96,-1475.99"></polygon>
+<text text-anchor="middle" x="2734.56" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__netzStatusDialog</text>
+</g>
+<!-- Dialog.Dialog&#45;&gt;Brett.Brett -->
+<g id="edge5" class="edge">
+<title>Dialog.Dialog-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M2644.06,-554.05C2695.17,-584.55 2746.04,-616.19 2793.74,-647.8 3158.1,-889.27 3549.16,-1192.36 3837.6,-1425.05"></path>
+<polygon fill="black" stroke="black" points="3837.35,-1424.85 3844.53,-1425.51 3846.69,-1432.39 3839.51,-1431.73 3837.35,-1424.85"></polygon>
+<text text-anchor="middle" x="2836.9" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__resignDialog</text>
+</g>
+<!-- Feld.Feld -->
+<g id="node5" class="node">
+<title>Feld.Feld</title>
+<polygon fill="none" stroke="black" points="3048.68,-118.1 3048.68,-511.7 3504.8,-511.7 3504.8,-118.1 3048.68,-118.1"></polygon>
+<text text-anchor="start" x="3264.3" y="-495.1" font-family="Times,serif" font-size="14.00">Feld</text>
+<polyline fill="none" stroke="black" points="3048.68,-486.9 3504.8,-486.9"></polyline>
+<text text-anchor="start" x="3058.4" y="-470.3" font-family="Times,serif" font-size="14.00">__FigureGroup</text>
+<text text-anchor="start" x="3058.4" y="-453.5" font-family="Times,serif" font-size="14.00">__effectKeyHighlight : str</text>
+<text text-anchor="start" x="3058.4" y="-436.7" font-family="Times,serif" font-size="14.00">__effects : list</text>
+<text text-anchor="start" x="3058.4" y="-419.9" font-family="Times,serif" font-size="14.00">__figure : Optional[None | Springer | Turm | Bauer | Laeufer | Dame | Koenig]</text>
+<text text-anchor="start" x="3058.4" y="-403.1" font-family="Times,serif" font-size="14.00">__label : str</text>
+<text text-anchor="start" x="3058.4" y="-386.3" font-family="Times,serif" font-size="14.00">__size : tuple[int, int]</text>
+<text text-anchor="start" x="3058.4" y="-369.5" font-family="Times,serif" font-size="14.00">color : str</text>
+<text text-anchor="start" x="3058.4" y="-352.7" font-family="Times,serif" font-size="14.00">image</text>
+<text text-anchor="start" x="3058.4" y="-335.9" font-family="Times,serif" font-size="14.00">rect</text>
+<polyline fill="none" stroke="black" points="3048.68,-327.7 3504.8,-327.7"></polyline>
+<text text-anchor="start" x="3056.68" y="-311.1" font-family="Times,serif" font-size="14.00">__drawFieldSurface(): None</text>
+<text text-anchor="start" x="3056.68" y="-294.3" font-family="Times,serif" font-size="14.00">__getFigureGroup(): pygame.sprite.GroupSingle</text>
+<text text-anchor="start" x="3056.68" y="-277.5" font-family="Times,serif" font-size="14.00">__init__(size: tuple[int, int], topLeftCorner: tuple[int, int], color: str, label: str)</text>
+<text text-anchor="start" x="3056.68" y="-260.7" font-family="Times,serif" font-size="14.00">addFieldHighlight(HighlightType: str): None</text>
+<text text-anchor="start" x="3056.68" y="-243.9" font-family="Times,serif" font-size="14.00">clearFieldHighlights(): None</text>
+<text text-anchor="start" x="3056.68" y="-227.1" font-family="Times,serif" font-size="14.00">getFigure(): None | Springer | Turm | Bauer | Laeufer | Dame | Koenig</text>
+<text text-anchor="start" x="3056.68" y="-210.3" font-family="Times,serif" font-size="14.00">getLabel(): str</text>
+<text text-anchor="start" x="3056.68" y="-193.5" font-family="Times,serif" font-size="14.00">getRect(): pygame.rect.Rect</text>
+<text text-anchor="start" x="3056.68" y="-176.7" font-family="Times,serif" font-size="14.00">removeFieldHighlight(HighlightType: str): None</text>
+<text text-anchor="start" x="3056.68" y="-159.9" font-family="Times,serif" font-size="14.00">setFieldPosition(topLeftCorner: tuple[int, int]): None</text>
+<text text-anchor="start" x="3056.68" y="-143.1" font-family="Times,serif" font-size="14.00">setFigure(Figure: None | Springer | Turm | Bauer | Laeufer | Dame | Koenig)</text>
+<text text-anchor="start" x="3056.68" y="-126.3" font-family="Times,serif" font-size="14.00">update(): None</text>
+</g>
+<!-- Feld.Feld&#45;&gt;Brett.Brett -->
+<g id="edge16" class="edge">
+<title>Feld.Feld-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M3409.52,-511.89C3520.29,-675.41 3684.62,-917.97 3840.26,-1147.71"></path>
+<polygon fill="none" stroke="black" points="3840.19,-1147.62 3846.87,-1150.34 3846.92,-1157.55 3840.25,-1154.83 3840.19,-1147.62"></polygon>
+<text text-anchor="middle" x="3529.23" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__cursor</text>
+</g>
+<!-- FigurBuilder.FigurBuilder -->
+<g id="node6" class="node">
+<title>FigurBuilder.FigurBuilder</title>
+<polygon fill="none" stroke="black" points="8066.95,-67.7 8066.95,-562.1 10888.53,-562.1 10888.53,-67.7 8066.95,-67.7"></polygon>
+<text text-anchor="start" x="9441.57" y="-545.5" font-family="Times,serif" font-size="14.00">FigurBuilder</text>
+<polyline fill="none" stroke="black" points="8066.95,-537.3 10888.53,-537.3"></polyline>
+<text text-anchor="start" x="9399.6" y="-520.7" font-family="Times,serif" font-size="14.00">__KillMates : bool</text>
+<text text-anchor="start" x="9399.6" y="-503.9" font-family="Times,serif" font-size="14.00">__canJump : bool</text>
+<text text-anchor="start" x="9399.6" y="-487.1" font-family="Times,serif" font-size="14.00">__centerPos : tuple[int, int]</text>
+<text text-anchor="start" x="9399.6" y="-470.3" font-family="Times,serif" font-size="14.00">__fieldLabelStartLetter : str</text>
+<text text-anchor="start" x="9399.6" y="-453.5" font-family="Times,serif" font-size="14.00">__field_count : int</text>
+<text text-anchor="start" x="9399.6" y="-436.7" font-family="Times,serif" font-size="14.00">__field_length : int</text>
+<text text-anchor="start" x="9399.6" y="-419.9" font-family="Times,serif" font-size="14.00">__hasKingRole : bool</text>
+<text text-anchor="start" x="9399.6" y="-403.1" font-family="Times,serif" font-size="14.00">__imagePath : str</text>
+<text text-anchor="start" x="9399.6" y="-386.3" font-family="Times,serif" font-size="14.00">__movedAmount : int</text>
+<text text-anchor="start" x="9399.6" y="-369.5" font-family="Times,serif" font-size="14.00">__team : int</text>
+<text text-anchor="start" x="9399.6" y="-352.7" font-family="Times,serif" font-size="14.00">image</text>
+<text text-anchor="start" x="9399.6" y="-335.9" font-family="Times,serif" font-size="14.00">rect</text>
+<polyline fill="none" stroke="black" points="8066.95,-327.7 10888.53,-327.7"></polyline>
+<text text-anchor="start" x="8074.95" y="-311.1" font-family="Times,serif" font-size="14.00">__getIsFieldLabelValid(testFieldlabel: str)</text>
+<text text-anchor="start" x="8074.95" y="-294.3" font-family="Times,serif" font-size="14.00">__init__(image: str, size: int, field_length: int, field_count: int, fieldLabelStartLetter: str, teamID: int, canJump: bool, KillMates: bool, hasKingRole: bool)</text>
+<text text-anchor="start" x="8074.95" y="-277.5" font-family="Times,serif" font-size="14.00">convertRelativePointToFieldLabel(originFieldLabel: str, RelativePoint: tuple[int, int]): str | None</text>
+<text text-anchor="start" x="8074.95" y="-260.7" font-family="Times,serif" font-size="14.00">getCanJump(): bool</text>
+<text text-anchor="start" x="8074.95" y="-243.9" font-family="Times,serif" font-size="14.00">getCanKillMates(): bool</text>
+<text text-anchor="start" x="8074.95" y="-227.1" font-family="Times,serif" font-size="14.00">getHasMoved(): bool</text>
+<text text-anchor="start" x="8074.95" y="-210.3" font-family="Times,serif" font-size="14.00">getKingRole(): bool</text>
+<text text-anchor="start" x="8074.95" y="-193.5" font-family="Times,serif" font-size="14.00">getMovedAmount(): int</text>
+<text text-anchor="start" x="8074.95" y="-176.7" font-family="Times,serif" font-size="14.00">getNewTurnsListWithAddingRelative(originFieldLabel: str, oldZugList: list, RelativePoint: tuple[int, int], onlyOnKill: bool, canKill: bool, hasAnxiety: bool, specialMoveLabel: str | None, needFigureOnField: str | None, needFigureType: type | None, allowNeededFigureHasTurned: bool | None, endPointNeededFigure: str | None, onDoneTurnCall: Callable | None, killMaybeFigureType: type | None, killMaybeFigureField: str | None, killMaybeFigureMustHadDoubleWalkLastTurn: bool): list[dict]</text>
+<text text-anchor="start" x="8074.95" y="-159.9" font-family="Times,serif" font-size="14.00">getTeam(): int</text>
+<text text-anchor="start" x="8074.95" y="-143.1" font-family="Times,serif" font-size="14.00">moved()</text>
+<text text-anchor="start" x="8074.95" y="-126.3" font-family="Times,serif" font-size="14.00">setFieldCount(field_count: int): None</text>
+<text text-anchor="start" x="8074.95" y="-109.5" font-family="Times,serif" font-size="14.00">setFieldLabelStartLetter(Letter: str): None</text>
+<text text-anchor="start" x="8074.95" y="-92.7" font-family="Times,serif" font-size="14.00">setKingRole(kingRole: bool): None</text>
+<text text-anchor="start" x="8074.95" y="-75.9" font-family="Times,serif" font-size="14.00">undoMovedCounterByOne()</text>
+</g>
+<!-- Koenig.Koenig -->
+<g id="node7" class="node">
+<title>Koenig.Koenig</title>
+<polygon fill="none" stroke="black" points="3523,-252.5 3523,-377.3 4196.48,-377.3 4196.48,-252.5 3523,-252.5"></polygon>
+<text text-anchor="start" x="3839.13" y="-360.7" font-family="Times,serif" font-size="14.00">Koenig</text>
+<polyline fill="none" stroke="black" points="3523,-352.5 4196.48,-352.5"></polyline>
+<text text-anchor="start" x="3802.97" y="-335.9" font-family="Times,serif" font-size="14.00">__canKill : bool</text>
+<text text-anchor="start" x="3802.97" y="-319.1" font-family="Times,serif" font-size="14.00">__hasAnxiety : bool</text>
+<text text-anchor="start" x="3802.97" y="-302.3" font-family="Times,serif" font-size="14.00">__mustKill : bool</text>
+<polyline fill="none" stroke="black" points="3523,-294.1 4196.48,-294.1"></polyline>
+<text text-anchor="start" x="3531" y="-277.5" font-family="Times,serif" font-size="14.00">__init__(image: str, size: int, field_length: int, field_count: int, fieldLabelStartLetter: str, teamID: int, mustKill: bool)</text>
+<text text-anchor="start" x="3531" y="-260.7" font-family="Times,serif" font-size="14.00">getMaybePossibleTurns(originFieldLabel: str): list[dict]</text>
+</g>
+<!-- Koenig.Koenig&#45;&gt;Brett.Brett -->
+<g id="edge8" class="edge">
+<title>Koenig.Koenig-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M3877.09,-377.67C3894.63,-440.1 3924.13,-545.1 3959.35,-670.49"></path>
+<polygon fill="black" stroke="black" points="3959.29,-670.27 3964.76,-674.97 3962.53,-681.82 3957.06,-677.13 3959.29,-670.27"></polygon>
+<text text-anchor="middle" x="3990.9" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__blackKing</text>
+</g>
+<!-- Koenig.Koenig&#45;&gt;Brett.Brett -->
+<g id="edge9" class="edge">
+<title>Koenig.Koenig-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M3897.89,-377.58C3936.54,-442.59 3995.52,-549.05 4030.74,-647.8 4033.41,-655.28 4036.05,-662.8 4038.67,-670.36"></path>
+<polygon fill="black" stroke="black" points="4038.71,-670.48 4044.45,-674.85 4042.61,-681.82 4036.88,-677.45 4038.71,-670.48"></polygon>
+<text text-anchor="middle" x="4067.29" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__whiteKing</text>
+</g>
+<!-- Laeufer.Laeufer -->
+<g id="node8" class="node">
+<title>Laeufer.Laeufer</title>
+<polygon fill="none" stroke="black" points="4214,-269.3 4214,-360.5 4887.48,-360.5 4887.48,-269.3 4214,-269.3"></polygon>
+<text text-anchor="start" x="4528.98" y="-343.9" font-family="Times,serif" font-size="14.00">Laeufer</text>
+<polyline fill="none" stroke="black" points="4214,-335.7 4887.48,-335.7"></polyline>
+<text text-anchor="start" x="4501.35" y="-319.1" font-family="Times,serif" font-size="14.00">__mustKill : bool</text>
+<polyline fill="none" stroke="black" points="4214,-310.9 4887.48,-310.9"></polyline>
+<text text-anchor="start" x="4222" y="-294.3" font-family="Times,serif" font-size="14.00">__init__(image: str, size: int, field_length: int, field_count: int, fieldLabelStartLetter: str, teamID: int, mustKill: bool)</text>
+<text text-anchor="start" x="4222" y="-277.5" font-family="Times,serif" font-size="14.00">getMaybePossibleTurns(originFieldLabel: str): list[dict]</text>
+</g>
+<!-- Laeufer.Laeufer&#45;&gt;Brett.Brett -->
+<g id="edge10" class="edge">
+<title>Laeufer.Laeufer-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M4528.83,-360.88C4499.25,-423.61 4447.1,-541.62 4419.75,-647.8 4417.84,-655.22 4415.95,-662.67 4414.09,-670.15"></path>
+<polygon fill="black" stroke="black" points="4414.06,-670.24 4416.51,-677.03 4411.19,-681.9 4408.74,-675.11 4414.06,-670.24"></polygon>
+<text text-anchor="middle" x="4462.74" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__blackBishop</text>
+</g>
+<!-- Laeufer.Laeufer&#45;&gt;Brett.Brett -->
+<g id="edge11" class="edge">
+<title>Laeufer.Laeufer-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M4545.68,-360.91C4537.97,-427.49 4522.21,-556.05 4503.74,-664.6 4503.44,-666.38 4503.13,-668.17 4502.83,-669.95"></path>
+<polygon fill="black" stroke="black" points="4502.83,-669.94 4505.76,-676.53 4500.8,-681.77 4497.87,-675.18 4502.83,-669.94"></polygon>
+<text text-anchor="middle" x="4548.13" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__whiteBishop</text>
+</g>
+<!-- Springer.Springer -->
+<g id="node9" class="node">
+<title>Springer.Springer</title>
+<polygon fill="none" stroke="black" points="4905,-252.5 4905,-377.3 5578.48,-377.3 5578.48,-252.5 4905,-252.5"></polygon>
+<text text-anchor="start" x="5217.63" y="-360.7" font-family="Times,serif" font-size="14.00">Springer</text>
+<polyline fill="none" stroke="black" points="4905,-352.5 5578.48,-352.5"></polyline>
+<text text-anchor="start" x="5182.64" y="-335.9" font-family="Times,serif" font-size="14.00">__SchrittBreite : int</text>
+<text text-anchor="start" x="5182.64" y="-319.1" font-family="Times,serif" font-size="14.00">__SchrittLaenge : int</text>
+<text text-anchor="start" x="5182.64" y="-302.3" font-family="Times,serif" font-size="14.00">__mustKill : bool</text>
+<polyline fill="none" stroke="black" points="4905,-294.1 5578.48,-294.1"></polyline>
+<text text-anchor="start" x="4913" y="-277.5" font-family="Times,serif" font-size="14.00">__init__(image: str, size: int, field_length: int, field_count: int, fieldLabelStartLetter: str, teamID: int, mustKill: bool)</text>
+<text text-anchor="start" x="4913" y="-260.7" font-family="Times,serif" font-size="14.00">getMaybePossibleTurns(originFieldLabel: str): list[dict]</text>
+</g>
+<!-- Springer.Springer&#45;&gt;Brett.Brett -->
+<g id="edge12" class="edge">
+<title>Springer.Springer-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M5201.03,-377.67C5114.5,-508.95 4903.9,-828.48 4705.14,-1130.05"></path>
+<polygon fill="black" stroke="black" points="4705.17,-1130 4705.21,-1137.21 4698.57,-1140.02 4698.53,-1132.81 4705.17,-1130"></polygon>
+<text text-anchor="middle" x="5062.34" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__blackKnight</text>
+</g>
+<!-- Springer.Springer&#45;&gt;Brett.Brett -->
+<g id="edge13" class="edge">
+<title>Springer.Springer-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M5223.66,-377.67C5201.46,-449.17 5160.23,-569.31 5107.74,-664.6 4993.74,-871.59 4845.7,-1083.32 4705.99,-1266.27"></path>
+<polygon fill="black" stroke="black" points="4705.91,-1266.36 4705.44,-1273.56 4698.62,-1275.89 4699.09,-1268.7 4705.91,-1266.36"></polygon>
+<text text-anchor="middle" x="5154.74" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__whiteKnight</text>
+</g>
+<!-- Dialog.TextInputDialog -->
+<g id="node10" class="node">
+<title>Dialog.TextInputDialog</title>
+<polygon fill="none" stroke="black" points="5596.15,-0.5 5596.15,-629.3 7357.33,-629.3 7357.33,-0.5 5596.15,-0.5"></polygon>
+<text text-anchor="start" x="6430.08" y="-612.7" font-family="Times,serif" font-size="14.00">TextInputDialog</text>
+<polyline fill="none" stroke="black" points="5596.15,-604.5 7357.33,-604.5"></polyline>
+<text text-anchor="start" x="6362.05" y="-587.9" font-family="Times,serif" font-size="14.00">__buttonRect</text>
+<text text-anchor="start" x="6362.05" y="-571.1" font-family="Times,serif" font-size="14.00">__buttonSize : int</text>
+<text text-anchor="start" x="6362.05" y="-554.3" font-family="Times,serif" font-size="14.00">__buttonSurface</text>
+<text text-anchor="start" x="6362.05" y="-537.5" font-family="Times,serif" font-size="14.00">__buttonText : str</text>
+<text text-anchor="start" x="6362.05" y="-520.7" font-family="Times,serif" font-size="14.00">__centerPosition : tuple[int]</text>
+<text text-anchor="start" x="6362.05" y="-503.9" font-family="Times,serif" font-size="14.00">__closeable : bool</text>
+<text text-anchor="start" x="6362.05" y="-487.1" font-family="Times,serif" font-size="14.00">__cursorSichtbar : bool</text>
+<text text-anchor="start" x="6362.05" y="-470.3" font-family="Times,serif" font-size="14.00">__eingabeWert : str</text>
+<text text-anchor="start" x="6362.05" y="-453.5" font-family="Times,serif" font-size="14.00">__headline : str</text>
+<text text-anchor="start" x="6362.05" y="-436.7" font-family="Times,serif" font-size="14.00">__headlineSize : int</text>
+<text text-anchor="start" x="6362.05" y="-419.9" font-family="Times,serif" font-size="14.00">__height : int</text>
+<text text-anchor="start" x="6362.05" y="-403.1" font-family="Times,serif" font-size="14.00">__initPhase : bool</text>
+<text text-anchor="start" x="6362.05" y="-386.3" font-family="Times,serif" font-size="14.00">__inputSize : int</text>
+<text text-anchor="start" x="6362.05" y="-369.5" font-family="Times,serif" font-size="14.00">__isShown : bool</text>
+<text text-anchor="start" x="6362.05" y="-352.7" font-family="Times,serif" font-size="14.00">__letzterCursorBlink</text>
+<text text-anchor="start" x="6362.05" y="-335.9" font-family="Times,serif" font-size="14.00">__maxInputLength : int</text>
+<text text-anchor="start" x="6362.05" y="-319.1" font-family="Times,serif" font-size="14.00">__onSubmit : Callable | None</text>
+<text text-anchor="start" x="6362.05" y="-302.3" font-family="Times,serif" font-size="14.00">__onSurfaceChange : Optional[Callable]</text>
+<text text-anchor="start" x="6362.05" y="-285.5" font-family="Times,serif" font-size="14.00">__onVoidClick : Callable | None</text>
+<text text-anchor="start" x="6362.05" y="-268.7" font-family="Times,serif" font-size="14.00">__posOffset : tuple[int, int]</text>
+<text text-anchor="start" x="6362.05" y="-251.9" font-family="Times,serif" font-size="14.00">__width : int</text>
+<text text-anchor="start" x="6362.05" y="-235.1" font-family="Times,serif" font-size="14.00">image</text>
+<text text-anchor="start" x="6362.05" y="-218.3" font-family="Times,serif" font-size="14.00">rect</text>
+<polyline fill="none" stroke="black" points="5596.15,-210.1 7357.33,-210.1"></polyline>
+<text text-anchor="start" x="5604.15" y="-193.5" font-family="Times,serif" font-size="14.00">__CallOnSurfaceChange()</text>
+<text text-anchor="start" x="5604.15" y="-176.7" font-family="Times,serif" font-size="14.00">__init__(DialogWidth: int, DialogHeight: int, centerPosition: tuple[int], headline: str, headlineSize: int, inputSize: int, buttonText: str, buttonSize: int, closeable: bool, onSubmit: Callable | None, onVoidClick: Callable | None, posOffset: tuple[int, int], onSurfaceChange: Optional[Callable], maxInputLength: int)</text>
+<text text-anchor="start" x="5604.15" y="-159.9" font-family="Times,serif" font-size="14.00">clearValue()</text>
+<text text-anchor="start" x="5604.15" y="-143.1" font-family="Times,serif" font-size="14.00">getIfShown()</text>
+<text text-anchor="start" x="5604.15" y="-126.3" font-family="Times,serif" font-size="14.00">getValue(): str</text>
+<text text-anchor="start" x="5604.15" y="-109.5" font-family="Times,serif" font-size="14.00">handleKeyDown(event: pygame.event.Event)</text>
+<text text-anchor="start" x="5604.15" y="-92.7" font-family="Times,serif" font-size="14.00">handleLeftClick(pos: tuple[int, int])</text>
+<text text-anchor="start" x="5604.15" y="-75.9" font-family="Times,serif" font-size="14.00">hideSurface()</text>
+<text text-anchor="start" x="5604.15" y="-59.1" font-family="Times,serif" font-size="14.00">makeSurface()</text>
+<text text-anchor="start" x="5604.15" y="-42.3" font-family="Times,serif" font-size="14.00">setHeadline(headline: str)</text>
+<text text-anchor="start" x="5604.15" y="-25.5" font-family="Times,serif" font-size="14.00">showSurface()</text>
+<text text-anchor="start" x="5604.15" y="-8.7" font-family="Times,serif" font-size="14.00">update()</text>
+</g>
+<!-- Dialog.TextInputDialog&#45;&gt;Brett.Brett -->
+<g id="edge6" class="edge">
+<title>Dialog.TextInputDialog-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M6006.29,-629.72C5622.16,-885.96 5083.47,-1245.3 4708.92,-1495.14"></path>
+<polygon fill="black" stroke="black" points="4708.9,-1495.15 4706.13,-1501.81 4698.92,-1501.81 4701.69,-1495.16 4708.9,-1495.15"></polygon>
+<text text-anchor="middle" x="6012.95" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__nameDialog</text>
+</g>
+<!-- Dialog.TextInputDialog&#45;&gt;Brett.Brett -->
+<g id="edge7" class="edge">
+<title>Dialog.TextInputDialog-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M6104.66,-629.77C6088.93,-641.69 6073.25,-653.35 6057.74,-664.6 5613.4,-986.89 5077.02,-1316.49 4708.96,-1534.21"></path>
+<polygon fill="black" stroke="black" points="4708.95,-1534.21 4705.82,-1540.71 4698.62,-1540.32 4701.75,-1533.82 4708.95,-1534.21"></polygon>
+<text text-anchor="middle" x="6100.24" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__ipDialog</text>
+</g>
+<!-- Turm.Turm -->
+<g id="node11" class="node">
+<title>Turm.Turm</title>
+<polygon fill="none" stroke="black" points="7375,-269.3 7375,-360.5 8048.48,-360.5 8048.48,-269.3 7375,-269.3"></polygon>
+<text text-anchor="start" x="7696.19" y="-343.9" font-family="Times,serif" font-size="14.00">Turm</text>
+<polyline fill="none" stroke="black" points="7375,-335.7 8048.48,-335.7"></polyline>
+<text text-anchor="start" x="7662.35" y="-319.1" font-family="Times,serif" font-size="14.00">__mustKill : bool</text>
+<polyline fill="none" stroke="black" points="7375,-310.9 8048.48,-310.9"></polyline>
+<text text-anchor="start" x="7383" y="-294.3" font-family="Times,serif" font-size="14.00">__init__(image: str, size: int, field_length: int, field_count: int, fieldLabelStartLetter: str, teamID: int, mustKill: bool)</text>
+<text text-anchor="start" x="7383" y="-277.5" font-family="Times,serif" font-size="14.00">getMaybePossibleTurns(originFieldLabel: str): list[dict]</text>
+</g>
+<!-- Turm.Turm&#45;&gt;Brett.Brett -->
+<g id="edge14" class="edge">
+<title>Turm.Turm-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M7675.05,-360.85C7616.85,-429.19 7496.57,-558.77 7366.74,-629.8 7339.74,-644.57 7329.18,-638.37 7299.88,-647.8 6364.97,-948.66 5294.37,-1369.82 4710,-1606.42"></path>
+<polygon fill="black" stroke="black" points="4709.96,-1606.43 4705.9,-1612.39 4698.84,-1610.94 4702.9,-1604.98 4709.96,-1606.43"></polygon>
+<text text-anchor="middle" x="7340.17" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__blackTower</text>
+</g>
+<!-- Turm.Turm&#45;&gt;Brett.Brett -->
+<g id="edge15" class="edge">
+<title>Turm.Turm-&gt;Brett.Brett</title>
+<path fill="none" stroke="black" d="M7680.18,-360.81C7626.54,-434.07 7510.7,-579.66 7380.74,-664.6 6519.72,-1227.32 5340.08,-1551.96 4710.58,-1695.96"></path>
+<polygon fill="black" stroke="black" points="4710.7,-1695.93 4705.74,-1701.17 4699,-1698.6 4703.96,-1693.37 4710.7,-1695.93"></polygon>
+<text text-anchor="middle" x="7442.56" y="-652" font-family="Times,serif" font-size="14.00" fill="green">__whiteTower</text>
+</g>
+</g>
+</g></svg>
