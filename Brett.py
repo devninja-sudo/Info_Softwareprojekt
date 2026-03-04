@@ -1298,10 +1298,9 @@ class Brett(pygame.sprite.Sprite):
 
     def getPossibleTurnFields(self, Field:Feld, ignoreChecksOrAnxiety:bool=False, ignoreBuildingChecks:bool=False, ignoreCastling:bool=False)->list[Feld]:        # Geht sicher, dass nicht doch irgendwie Ein Feld außerhalb des Brettes ist arbeitet noch Relative
         '''
-        #HIER WEITERMACHEN MIT SPEZIFIZIEREN
         Vor.: -Field- ist ein gueltiges Feld; die bool Flags steuern Filterregeln.
         Eff.: -
-        Erg.: Eine Liste aller moeglichen Zielfelder fuer den Zug ist geliefert.
+        Erg.: Eine Liste aller moeglichen gueltigen Zielfelder fuer den Zug ist geliefert.
         '''
         PossibleTurnFields = []
         relativePossibleTurnFields:list[dict] = self.getPossibleTurnFieldsFullData(Field, ignoreChecksOrAnxiety, ignoreBuildingChecks, ignoreCastling)
@@ -1338,9 +1337,9 @@ class Brett(pygame.sprite.Sprite):
     
     def __getOnlyTurnDataWithValidFields(self, turnsData:list[dict])->list[dict]:
         '''
-        Vor.: -turnsData- ist eine Liste potentieller Zugdaten.
-        Eff.: Filtert Zugdaten auf gueltige Zielfelder.
-        Erg.: Eine bereinigte Liste gueltiger Zugdaten ist geliefert.
+        Vor.: -turnsData- ist eine Liste potentieller Zugdaten, die Liste hat als Inhalt ausschließlich dicts mit dem Key "fieldLabel" oder keine Inhalte.
+        Eff.: -
+        Erg.: Eine bereinigte Liste gueltiger Zugdaten von -turnsData- ist geliefert. Zuege mit nicht gueltigem Zielzugfeld bezeichnungen sind nicht in der Liste.
         '''
         turnDataValidFields = []
         for turnData in turnsData:
@@ -1356,9 +1355,9 @@ class Brett(pygame.sprite.Sprite):
 
     def __getTurnsNotKillingMatesFromTurnData(self, turnsData:list[dict], TeamID:int)->list[dict]:
         '''
-        Vor.: -turnsData- ist eine Liste von Zugdaten, -TeamID- die Team-ID der zu ziehenden Figur.
-        Eff.: Entfernt Zuege, die eigene Figuren schlagen wuerden.
-        Erg.: Eine gefilterte Liste erlaubter Zugdaten ist geliefert.
+        Vor.: -turnsData- ist eine Liste potentieller Zugdaten, die Liste hat als Inhalt ausschließlich dicts mit dem Key "fieldLabel" oder keine Inhalte. -TeamID- die Team-ID des zu ziehenden Teams.
+        Eff.: -
+        Erg.: Eine gefilterte Liste ohne Zugdaten, welche eine eigene Figur schlagen wuerde, ist geliefert.
         '''
         turnDataNotKillingMates = []
         for turnData in turnsData:
@@ -1380,8 +1379,25 @@ class Brett(pygame.sprite.Sprite):
     def getPossibleTurnFieldsFullData(self, startingPointField:Feld, ignoreChecksOrAnxiety:bool=False, ignoreBuildingChecks:bool=False, ignoreCastling:bool=False)->list[dict]:
         '''
         Vor.: -startingPointField- ist ein gueltiges Feld; Flags steuern Regelpruefungen.
-        Eff.: Ermittelt alle legalen Zugdaten.
-        Erg.: Eine Liste mit Zugdaten ist geliefert.
+        Eff.: -
+        Erg.: Eine Liste mit legalen Zugdaten ist geliefert.
+            Die gelieferte Liste besitzt nur Tabellen oder keine Eintraege.
+            Die Tabellen in der Liste besitzen folgende Informationen:
+                "" steht fuer den Key und das hinter dem = fuer die Erklaerung des Values
+                "point" = :tuple[int, int] (gueltige Feldbezeichnung, die relativ zu -originFieldLabel- die Anzahl der Felder angibt, die fuer einen Zug in Buchstaben und Zahlen Richtung noetig sind)
+                "fieldLabel" = :str eine gueltige Feldbezeichnung (das erste Zeichen ist ein Buchstabe im Berreich des Buchstaben der Anfangsbeschriftungs und dem Buchstaben der Anfangsbeschriftungs versetzt um die Feldanzahl / das zweite Zeichen ist eine Zahl im Berreich der Zahl der Anfangsbeschriftungs und der Zahl der Anfangsbeschriftungs versetzt um die Feldanzahl) zu dem sich die Figur bewegen soll.
+                "onlyOnKill" = :bool (-True-, wenn die Figur nur den Zug machen kann, wenn sie dabei eine andere Figur schlagen wuerde)
+                "canKill" = :bool (-True-, wenn die Figur beim Zug auf das Zielfeld eine andere Figur schlagen koennte)
+                "killMaybeFigureType" =  (Klasse der Figur, die geschlagen werden kann)
+                "killMaybeFigureField" = :str (Feldbezeichnung des Feldes, auf dem eine Figur geschlagen werden kann)
+                "killMaybeFigureMustHadDoubleWalkLastTurn" = :bool (beschreibt, ob die Figur, die geschlagen werden kann, im letzten Zug einen Doppelzug gemacht hat)
+                "hasAnxiety" = :boool oder immer True, wenn die Figur die Koenigsrolle traegt (beschreibt, ob die Figur auf dem Zeilfeld des Zuges geschlagen werden koennte)
+                "specialTurnType" = :str (spezielle Zugbezeichnung)
+                "needFigureOnField" = :str (Zug ist nur moeglich, wenn auf dem Feld eine Figur steht und ein anderes Feld angegeben ist)
+                "neededFigureType" =  (ueberprueft, ob der Zug einer bestimmten hier angegebender Figur als Figurklasse mit der Figur auf dem Feld uebereinstimmt)
+                "allowNeededFigureHasTurned" = :bool (beschreibt, ob sie die Figur auf dem Feld -needFigureOnField- schon bewegt hat)
+                "endPointNeededFigure" = :str (Feldbezeichnung, auf dem die Firgur nach dem Zug steht)
+                "onDoneTurnCall" = :Callable (beschreibt die Methode/Funktion, die nach dem Zug ausgefuerht wird)
         '''
         startFigure:None|Springer|Turm|Bauer|Laeufer|Dame|Koenig = startingPointField.getFigure()
         if startFigure == None:
@@ -1521,7 +1537,7 @@ class Brett(pygame.sprite.Sprite):
     def __checkCastlingConditions(self, KingField:Feld, TargetField:Feld)->bool:
         '''
         Vor.: -KingField- und -TargetField- gehoeren zum Rochade-Kontext.
-        Eff.: Prueft freie Zwischenfelder und "Schachfreiheit", aslo keine Bedrohungen auf überschrittenen Feldern.
+        Eff.: -
         Erg.: -True- bei erfuellten Rochadebedingungen, sonst -False-.
         '''
         FieldsBetween:list[Feld] = self.__getFieldsBetweenHorizontalVerticalOnly(KingField, TargetField)
@@ -1539,8 +1555,25 @@ class Brett(pygame.sprite.Sprite):
     def __getTurnDataWithoutWalkThroughFigures(self, relativeMaybePossibleTurnsData:list[dict], startField:Feld)->list|list[dict]:
         '''
         Vor.: -relativeMaybePossibleTurnsData- enthaelt lineare Zugmuster, -startField- ist gueltig.
-        Eff.: Sortiert Zuglinien nach Richtung und kuerzt sie an blockierenden Figuren.
-        Erg.: Eine Liste mit erreichbaren Zugdaten ohne Durchlaufen von Figuren ist geliefert.
+        -relativeMaybePossibleTurnsData- besteht aus Tabellen oder ist Leer. 
+        Die Tabellen haben folgende Informationen:
+                "" steht fuer den Key und das hinter dem = fuer die Erklaerung des Values
+                "point" = :tuple[int, int] (gueltige Feldbezeichnung, die relativ zu -originFieldLabel- die Anzahl der Felder angibt, die fuer einen Zug in Buchstaben und Zahlen Richtung noetig sind)
+                "fieldLabel" = :str eine gueltige Feldbezeichnung (das erste Zeichen ist ein Buchstabe im Berreich des Buchstaben der Anfangsbeschriftungs und dem Buchstaben der Anfangsbeschriftungs versetzt um die Feldanzahl / das zweite Zeichen ist eine Zahl im Berreich der Zahl der Anfangsbeschriftungs und der Zahl der Anfangsbeschriftungs versetzt um die Feldanzahl) zu dem sich die Figur bewegen soll.
+                "onlyOnKill" = :bool (-True-, wenn die Figur nur den Zug machen kann, wenn sie dabei eine andere Figur schlagen wuerde)
+                "canKill" = :bool (-True-, wenn die Figur beim Zug auf das Zielfeld eine andere Figur schlagen koennte)
+                "killMaybeFigureType" =  (Klasse der Figur, die geschlagen werden kann)
+                "killMaybeFigureField" = :str (Feldbezeichnung des Feldes, auf dem eine Figur geschlagen werden kann)
+                "killMaybeFigureMustHadDoubleWalkLastTurn" = :bool (beschreibt, ob die Figur, die geschlagen werden kann, im letzten Zug einen Doppelzug gemacht hat)
+                "hasAnxiety" = :boool oder immer True, wenn die Figur die Koenigsrolle traegt (beschreibt, ob die Figur auf dem Zeilfeld des Zuges geschlagen werden koennte)
+                "specialTurnType" = :str (spezielle Zugbezeichnung)
+                "needFigureOnField" = :str (Zug ist nur moeglich, wenn auf dem Feld eine Figur steht und ein anderes Feld angegeben ist)
+                "neededFigureType" =  (ueberprueft, ob der Zug einer bestimmten hier angegebender Figur als Figurklasse mit der Figur auf dem Feld uebereinstimmt)
+                "allowNeededFigureHasTurned" = :bool (beschreibt, ob sie die Figur auf dem Feld -needFigureOnField- schon bewegt hat)
+                "endPointNeededFigure" = :str (Feldbezeichnung, auf dem die Firgur nach dem Zug steht)
+                "onDoneTurnCall" = :Callable (beschreibt die Methode/Funktion, die nach dem Zug ausgefuerht wird)
+        Eff.: -
+        Erg.: -relativeMaybePossibleTurnsData- ist nur noch mit erreichbaren Zugdaten ohne Durchlaufen von Figuren geliefert.
         '''
         xLine:list = []
         yLine:list = []
@@ -1588,7 +1621,9 @@ class Brett(pygame.sprite.Sprite):
     
     def __cutLineAtWalkingThroughFigures(self, Line:list[dict], startField:Feld)->list[dict]|list:
         '''
-        Vor.: 'Line' ist nach zunehmenden Abstand sortiert und geht entweder Wagerecht oder Horizontal
+        Vor.: 'Line' beschreibt Zuege und ist nach zunehmenden Zugabstand sortiert und geht entweder nur Wagerecht oder nur Horizontal in eine Linie.
+            'Linie' besteht entweder aus keinen Werten oder aus Tabellen.
+            Wenn sie Tabellen enthaelt hat jede Tabelle aus 'Linie' den Key "fieldLabel", weldches eine gueltige Feldbezeichnung als String enthaelt.
         Eff.: -
         Erg.: Eine Liste die nur noch die relativen beinhaltet die von dem startFeld aus, wenn man die Linie von links nach rechts durchläuft nicht durch eine andere Figur läuft, sondern diese schlagen würde.
         '''
@@ -1614,18 +1649,18 @@ class Brett(pygame.sprite.Sprite):
     def __sortToDestination(self, Line:list[dict], sortIndex:int)->list[list[dict]]:
         '''
         Vor.: -Line- ist eine Liste von Zugdaten mit Punktwerten.
-        Eff.: Sortiert Linie in zwei Richtungen.
+        Eff.: -
         Erg.: Zwei richtungsgetrennte, sortierte Teillisten sind geliefert.
         '''
         Line.sort(key=self.__getPointFromDict)
         Line = self.__SpitNegativePoints(Line, sortIndex)
         return self.__reverseFirstPart(Line)
     
-    def __reverseFirstPart(self, Line:list)->list:
+    def __reverseFirstPart(self, Line:list)->tuple:
         '''
         Vor.: -Line- enthaelt zwei Teillisten.
-        Eff.: Dreht die erste Teilliste um.
-        Erg.: Das Tupel aus erster und zweiter Teilliste ist geliefert.
+        Eff.: -
+        Erg.: Ein Tupel aus erster umgedrehter Teilliste und zweiter Teilliste ist geliefert.
         '''
         firstPartLine = Line[0]
         if type(firstPartLine) == list:
@@ -1634,9 +1669,9 @@ class Brett(pygame.sprite.Sprite):
     
     def __SpitNegativePoints(self, Line:list[dict], SplitNumberIndex:int)->list[list, list]:
         '''
-        Vor.: -Line- enthaelt Zugdaten mit numerischen Punktwerten.
-        Eff.: Trennt Eintraege nach negativem/nicht-negativem Wert am gegebenen Index.
-        Erg.: Zwei Listen (negativ | nicht-negativ) sind geliefert.
+        Vor.: -Line- enthaelt Zugdaten als Tabellen mit numerischen Punktwerten als tuple und einer laenge von 2 unter dem Schluessel 'point'. -SplitNumberIndex- ist 0 oder 1
+        Eff.: -
+        Erg.: Eine Listen mit zwei Listen, welche die positven und negativen beschriebenden Punktwert bei dem -SplitNumberindex- Punktwert des tuples der jeweiligen Tabelle beim key 'point' (Liste mit Tabellen mit negativen Punktwert beim Tuple beim -SplitNumberIndex- aus der 'point' Tabelle aus -Line-, Liste mit positiven Punktwert beim Tuple beim -SplitNumberIndex- aus der 'point' Tabelle aus -Line-) sind geliefert.
         '''
         LinePositives = []
         LineNegatives = []
@@ -1651,7 +1686,7 @@ class Brett(pygame.sprite.Sprite):
     def getRelativeField(self, fieldLabel:str, relativeField:tuple[int, int])->Feld|None:
         '''
         Vor.: -fieldLabel- ist ein Startlabel, -relativeField- ein relativer Versatz.
-        Eff.: -
+        Eff.: - HIER WEITER
         Erg.: Das relative Zielfeld oder -None- bei Ungueltigkeit ist geliefert.
         '''
         startFieldX:int = ord(fieldLabel[0])
@@ -1724,3 +1759,4 @@ if __name__ == "__main__":
         pygame.display.update()
         clock.tick(60)
         #Spielbrett.setRotation(int(input()))
+
