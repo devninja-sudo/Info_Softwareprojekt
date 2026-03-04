@@ -1,5 +1,7 @@
 import pygame
 from sys import exit
+import socket
+import threading
 from Feld import Feld
 from Springer import Springer
 from Turm import Turm
@@ -7,14 +9,24 @@ from Laeufer import Laeufer
 from Dame import Dame
 from Bauer import Bauer
 from Koenig import Koenig
-from Dialog import Dialog
+from Dialog import Dialog, TextInputDialog
 from time import time
 
 class Brett(pygame.sprite.Sprite):
+    '''
+    Vor.: -edge_length- ist vom Typ Integer und beschreibt die Kantenlaenge des quadratischen Schachbretts in Pixeln. Der Wert muss groesser als 0 sein.
+          -topLeftCorner- ist ein Tupel aus zwei Integern und beschreibt die linke obere Ecke des Brettes in Pixelkoordinaten.
+          -field_color1- ist vom Typ String und beschreibt die Farbe des ersten Feldmusters.
+          -field_color2- ist vom Typ String und beschreibt die Farbe des zweiten Feldmusters.
+          -rotation- ist vom Typ Integer und beschreibt die Rotation des Brettes in Grad. Sinnvolle Werte sind Vielfache von 90.
+    Eff.: Das Brett, die Felder, die Startdialoge und alle Spiel-/Netzwerk-Zustandsvariablen sind initialisiert.
+    Erg.: Eine Brettinstanz ist geliefert, welche -pygame.sprite.Sprite- geerbt hat und fuer den Spielstart vorbereitet ist.
+    '''
     def __init__(self, edge_length:int, topLeftCorner:tuple[int, int], field_color1:str="yellow", field_color2:str="red", rotation:int=0):
         super().__init__()
 
         self.SetupTurnVars()
+        self.__setupNetzwerkVars()
 
         self.__rotation:int = rotation
         self.__edge_length:int = edge_length
@@ -38,22 +50,487 @@ class Brett(pygame.sprite.Sprite):
         self.__setupBrett()
         self.__generateImage()
         self.__resignDialog.hideSurface()
+        self.__setupStartDialogs()
 
     def SetupTurnVars(self):
+        '''
+        Vor.: -
+        Eff.: Alle Statusvariablen für Züge sind initialisiert. 
+            Die Variablen: self.__onTurnTeam:int, self.__cursor, self.__turnNumber:int, self.__eventMode:str, self.__PawnPromotes:list und self.__running:bool sind eventuell beeinflusst worden. 
+        Erg.: -
+        '''
         self.__onTurnTeam:int = 0 
         self.__cursor = None
-        self.__eventMode:str = None 
+        self.__eventMode:str|None = None 
         self.__running:bool = False
         self.__turnNumber:int = 0
         self.__PawnPromotes:list = []
 
+    def __setupNetzwerkVars(self):
+        '''
+        Vor.: -
+        Eff.: Alle Netzwerk relevaten Variablen sind initialisiert.
+        Erg.: -
+        '''
+        self.__ready:bool = False
+        self.__netzAktiv:bool = False
+        self.__netzPort:int = 55555
+        self.__netzSock:socket.socket|None = None
+        self.__netzBuffer:str = ""
+        self.__netzVerbundenEvent = threading.Event()
+        self.__netzEmpfangThread:threading.Thread|None = None
+        self.__netzListenerThread:threading.Thread|None = None
+        self.__netzSucheThread:threading.Thread|None = None
+        self.__spielerName:str = ""
+        self.__meinTeam:int = 0
+        self.__wendeRemoteZugAn:bool = False
+        self.__modusDialog:Dialog|None = None
+        self.__nameDialog:TextInputDialog|None = None
+        self.__ipDialog:TextInputDialog|None = None
+        self.__netzStatusDialog:Dialog|None = None
+        self.__startDialogGruppe = pygame.sprite.Group()
+
+    def __setupStartDialogs(self):
+        '''
+        Vor.: Das Brett und die Dialoge sind initialisiert.
+        Eff.: Der Startmodus-Dialog ist erstellt und angezeigt. 
+            Inform einer weißen Box, welche sich ueber das Schachbrett streckt und die Ueberschrift "Spielmodus wählen" traegt.
+            Mit den Unterueberschriften "Spiel an einem Rechner" und "Spiel über Netzwerk", welche Interaktionsmoeglichkeiten darstellen im Bezug zur Ueberschrift.
+        Erg.: -
+        '''
+        self.__startDialogGruppe.empty()
+        self.__modusDialog = Dialog(
+            self.rect.width, self.rect.height,
+            (self.rect.width//2, self.rect.height//2),
+            "Spielmodus wählen", self.rect.height//10,
+            [
+                ["Spiel an einem Rechner", self.__waehleSingleplayer],
+                ["Spiel über Netzwerk", self.__zeigeNameDialog]
+            ],
+            self.rect.height//8, 0.42, False,
+            onVoidClick=self.__generateImage,
+            posOffset=self.rect.topleft,
+            onSurfaceChange=self.__generateImage
+        )
+        self.__startDialogGruppe.add(self.__modusDialog)
+        self.__generateImage()
+
+    def __zeigeNameDialog(self):
+        '''
+        Vor.: Die Startdialoggruppe ist initialisiert.
+        Eff.: Der Dialog zur Namenseingabe ist erstellt und aktiv gesetzt.
+            Inform einer weißen Box, welche sich ueber das Schachbrett streckt und die Ueberschrift "Name eingeben" traegt.
+            Mit den Unterueberschriften "Weiter", welche Interaktionsmoeglichkeiten darstellen im Bezug zur Ueberschrift.
+            Texteingaben sind in einem Eingabeberreich dargestellt.
+        Erg.: -
+        '''
+        self.__nameDialog = TextInputDialog(
+            self.rect.width, self.rect.height,
+            (self.rect.width//2, self.rect.height//2),
+            "Name eingeben", self.rect.height//10,
+            self.rect.height//10,
+            "Weiter", self.rect.height//10,
+            False,
+            onSubmit=self.__uebernehmeSpielerName,
+            onVoidClick=self.__generateImage,
+            posOffset=self.rect.topleft,
+            onSurfaceChange=self.__generateImage,
+            maxInputLength=24
+        )
+        self.__startDialogGruppe.empty()
+        self.__startDialogGruppe.add(self.__nameDialog)
+        self.__generateImage()
+
+    def __zeigeNetzStatusDialog(self, headline:str):
+        '''
+        Vor.: -headline- ist ein String und beschreibt die anzuzeigende Ueberschrift.
+        Eff.: Der Dialog zur Netzwerkinit und Suche ist erstellt und angezeigt.
+            Inform einer weißen Box, welche sich ueber das Schachbrett streckt und die Ueberschrift -headline- mittig traegt.
+            Mit den Unterueberschriften "Erneut suchen", welche eine Interaktionsmoeglichkeit darstellen im Bezug zur Ueberschrift.
+        Erg.: -
+        '''
+        self.__netzStatusDialog = Dialog(
+            self.rect.width, self.rect.height,
+            (self.rect.width//2, self.rect.height//2),
+            headline, self.rect.height//14,
+            [["Erneut suchen", self.__starteNetzSuche], ["IP eingeben", self.__zeigeIpDialog]],
+            self.rect.height//10, 0.7, False,
+            onVoidClick=self.__generateImage,
+            posOffset=self.rect.topleft,
+            onSurfaceChange=self.__generateImage
+        )
+        self.__startDialogGruppe.empty()
+        self.__startDialogGruppe.add(self.__netzStatusDialog)
+        self.__generateImage()
+
+    def __zeigeIpDialog(self):
+        self.__ipDialog = TextInputDialog(
+            self.rect.width, self.rect.height,
+            (self.rect.width//2, self.rect.height//2),
+            "IP eingeben", self.rect.height//10,
+            self.rect.height//10,
+            "Verbinden", self.rect.height//10,
+            False,
+            onSubmit=self.__verbindeMitIpText,
+            onVoidClick=self.__generateImage,
+            posOffset=self.rect.topleft,
+            onSurfaceChange=self.__generateImage,
+            maxInputLength=15
+        )
+        self.__startDialogGruppe.empty()
+        self.__startDialogGruppe.add(self.__ipDialog)
+        self.__generateImage()
+
+    def __istIPv4Gueltig(self, ipText:str)->bool:
+        teile = ipText.split(".")
+        if len(teile) != 4:
+            return False
+        for teil in teile:
+            if teil == "":
+                return False
+            if not(teil.isdigit()):
+                return False
+            wert = int(teil)
+            if wert < 0 or wert > 255:
+                return False
+        return True
+
+    def __verbindeMitIpText(self, ipText:str):
+        ipText = ipText.strip()
+        if not(self.__istIPv4Gueltig(ipText)):
+            if self.__ipDialog != None:
+                self.__ipDialog.setHeadline("IP ungueltig")
+            return
+        if self.__netzVerbundenEvent.is_set():
+            return
+        connectThread = threading.Thread(target=self.__direktConnectWorker, args=(ipText,), daemon=True)
+        connectThread.start()
+
+    def __direktConnectWorker(self, targetIp:str):
+        self.__zeigeNetzStatusDialog("Verbinde mit " + targetIp)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if sock.connect_ex((targetIp, self.__netzPort)) != 0:
+            sock.close()
+            self.__zeigeNetzStatusDialog("IP nicht erreichbar")
+            return
+        sock.sendall(("ASK;" + self.__spielerName + "\n").encode("utf-8"))
+        raw = sock.recv(2048)
+        if len(raw) == 0:
+            sock.close()
+            self.__zeigeNetzStatusDialog("Keine Antwort von IP")
+            return
+        responseText = raw.decode("utf-8").strip()
+        if responseText.startswith("OK;"):
+            self.__setzeNetzSocket(sock, 0)
+            return
+        sock.close()
+        self.__zeigeNetzStatusDialog("Handshake fehlgeschlagen")
+
+    def __waehleSingleplayer(self):
+        '''
+        Vor.: -
+        Eff.: Der Einzelspielermodus ist gesetzt und das Spiel gestartet.
+        Erg.: -
+        '''
+        self.__netzAktiv = False
+        if self.__modusDialog != None:
+            self.__modusDialog.hideSurface()
+        self.__startDialogGruppe.empty()
+        self.__ready = True
+        self.start()
+        self.__generateImage()
+
+    def __uebernehmeSpielerName(self, playerName:str):
+        '''
+        Vor.: -playerName- ist vom Typ String.
+        Eff.: Der Spielername ist überprueft und bei Gueltigkeit uebernommen. Bei ungueltigkeit ist die Dialogueberschrift nun "Name darf nicht leer sein" .
+        Erg.: -
+        '''
+        playerName = playerName.strip()
+        if playerName == "":
+            if self.__nameDialog != None:
+                self.__nameDialog.setHeadline("Name darf nicht leer sein")
+            return
+        self.__spielerName = playerName
+        self.__starteMultiplayer()
+
+    def __starteMultiplayer(self):
+        '''
+        Vor.: Ein gueltiger Spielername ist gesetzt.
+        Eff.: Multiplayer ist aktiviert, Listener gestartet und Suche wird gestartet.
+            Mittels einen bereits in der optik Beschriebenden Dialogfensters ist der Suchstatus mittels der Ueberschrift "Suche im  Netzwerk nach Spiel" abzulesen.
+        Erg.: -
+        '''
+        self.__netzAktiv = True
+        print("Netzwerkstart auf Host:", socket.gethostname(), "IP:", self.__holeLokaleIp())
+        self.__zeigeNetzStatusDialog("Suche im  Netzwerk nach Spiel")
+        if self.__netzListenerThread == None or not(self.__netzListenerThread.is_alive()):
+            self.__netzListenerThread = threading.Thread(target=self.__listenerWorker, daemon=True)
+            self.__netzListenerThread.start()
+        self.__starteNetzSuche()
+
+    def __starteNetzSuche(self):
+        '''
+        Vor.: -
+        Eff.: Ein Suchthread ist gestartet, falls dieser nicht bereits läuft.
+        Erg.: -
+        '''
+        if self.__netzVerbundenEvent.is_set():
+            return
+        self.__zeigeNetzStatusDialog("Suche im  Netzwerk nach Spiel")
+        self.__netzSucheThread = threading.Thread(target=self.__discoveryWorker, daemon=True)
+        self.__netzSucheThread.start()
+
+    def __holeLokaleIp(self)->str:
+        '''
+        Vor.: -
+        Eff.: -
+        Erg.: Die lokale IP ist als String geliefert.
+        '''
+        allIps = socket.gethostbyname_ex(socket.gethostname())[2]
+        for ip in allIps:
+            if not(ip.startswith("127.")):
+                return ip
+        if len(allIps) != 0:
+            return allIps[0]
+        return "127.0.0.1"
+
+    def __listenerWorker(self):
+        '''
+        Vor.: Netzwerkmodus ist aktiv und der definierte Port ist gueltig und ohne Netzwerkeinschraenkungen nutzbar.
+        Eff.: Wartet auf eingehende Partieanfrgen und beantwortet den "Handshake".
+        Erg.: -
+        '''
+        listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        listener.bind(("0.0.0.0", self.__netzPort))
+        listener.listen(3)
+        print("Listener aktiv auf Port", self.__netzPort)
+        while self.__netzAktiv and not(self.__netzVerbundenEvent.is_set()):
+            conn, _addr = listener.accept()
+            print("Eingehende Verbindung von", _addr)
+            raw = conn.recv(2048)
+            if len(raw) == 0:
+                conn.close()
+                continue
+            msgText = raw.decode("utf-8").strip()
+            print("Empfangen:", msgText)
+            msgParts = msgText.split(";")
+            if len(msgParts) < 2 or msgParts[0] != "ASK":
+                conn.close()
+                continue
+            if self.__netzVerbundenEvent.is_set():
+                conn.sendall("BUSY\n".encode("utf-8"))
+                conn.close()
+                continue
+            conn.sendall(("OK;" + self.__spielerName + "\n").encode("utf-8"))
+            print("Antwort gesendet: OK;" + self.__spielerName)
+            self.__setzeNetzSocket(conn, 1)
+            return
+
+    def __discoveryWorker(self):
+        '''
+        Vor.: Netzwerkmodus ist aktiv.
+        Eff.: Sucht im lokalen Netz nach Gegenstellen und fuehrt ggf. Handshake aus. Bei Fehlern ist der Fehler im Dialogfenster "LAN-Suche fehlgeschlagen" oder "Kein Spiel gefunden, warte auf Anfrage" ablesbar.
+        Erg.: -
+        '''
+        localIp = self.__holeLokaleIp()
+        chunks = localIp.split(".")
+        if len(chunks) != 4:
+            self.__zeigeNetzStatusDialog("LAN-Suche fehlgeschlagen")
+            return
+        prefix = f"{chunks[0]}.{chunks[1]}.{chunks[2]}"
+        own = int(chunks[3])
+        print("Starte Suche in", prefix + ".1-254", "eigene IP-Endung:", own)
+        for host in range(1, 255):
+            if not(self.__netzAktiv) or self.__netzVerbundenEvent.is_set():
+                return
+            if host == own:
+                continue
+            target = f"{prefix}.{host}"
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if sock.connect_ex((target, self.__netzPort)) != 0:
+                sock.close()
+                continue
+            print("Port offen auf", target)
+            sock.sendall(("ASK;" + self.__spielerName + "\n").encode("utf-8"))
+            print("Gesendet an", target, ": ASK;" + self.__spielerName)
+            raw = sock.recv(2048)
+            if len(raw) == 0:
+                sock.close()
+                continue
+            responseText = raw.decode("utf-8").strip()
+            print("Antwort von", target, ":", responseText)
+            if responseText.startswith("OK;"):
+                self.__setzeNetzSocket(sock, 0)
+                return
+            sock.close()
+        if not(self.__netzVerbundenEvent.is_set()):
+            print("Suche fertig, kein Spiel gefunden")
+            self.__zeigeNetzStatusDialog("Kein Spiel gefunden, warte auf Anfrage")
+
+    def __setzeNetzSocket(self, sock:socket.socket, localTeam:int):
+        '''
+        Vor.: -sock- ist ein offener Socket, -localTeam- ist eine Team-ID.
+        Eff.: Uebernimmt die Verbindung, setzt Team/Zustand und startet Empfang. Das Brett ist gestartet und auf dem Brett -image- gezeichnet, 
+            wenn kein Element sich ueber dem Brett befindet ist es im Fenster sichtbar.
+        Erg.: -
+        '''
+        if self.__netzVerbundenEvent.is_set():
+            sock.close()
+            return
+        self.__netzSock = sock
+        self.__meinTeam = localTeam
+        self.__netzVerbundenEvent.set()
+        print("Verbindung hergestellt. Eigenes Team:", localTeam)
+        if self.__modusDialog != None:
+            self.__modusDialog.hideSurface()
+        if self.__nameDialog != None:
+            self.__nameDialog.hideSurface()
+        if self.__ipDialog != None:
+            self.__ipDialog.hideSurface()
+        if self.__netzStatusDialog != None:
+            self.__netzStatusDialog.hideSurface()
+        self.__startDialogGruppe.empty()
+        self.__ready = True
+        self.start()
+        self.__starteNetzEmpfang()
+        self.__generateImage()
+
+    def __starteNetzEmpfang(self):
+        '''
+        Vor.: Eine Netzwerkverbindung ist aufgebaut.
+        Eff.: Teil des Netzwerk-Multitrheadings, startet falls dieser nicht existiert den Empfangs-Thread.
+        Erg.: -
+        '''
+        if self.__netzEmpfangThread != None and self.__netzEmpfangThread.is_alive():
+            return
+        self.__netzEmpfangThread = threading.Thread(target=self.__receiverWorker, daemon=True)
+        self.__netzEmpfangThread.start()
+
+    def __receiverWorker(self):
+        '''
+        Vor.: Netzwerkmodus aktiv und Verbindung gesetzt.
+        Eff.: Verantwortlich fuer den Empfang von Nachrichten, liest Zeilen und verarbreitet Zuege, dass heißt die Nachricht hat ggf. einen Zugumgesetzt.
+        Erg.: -
+        '''
+        while self.__netzAktiv and self.__netzVerbundenEvent.is_set():
+            if self.__netzSock == None:
+                return
+            raw = self.__netzSock.recv(4096)
+            if len(raw) == 0:
+                return
+            self.__netzBuffer += raw.decode("utf-8")
+            while "\n" in self.__netzBuffer:
+                line, self.__netzBuffer = self.__netzBuffer.split("\n", 1)
+                line = line.strip()
+                if line == "":
+                    continue
+                parts = line.split(";")
+                if len(parts) >= 3 and parts[0] == "MOVE":
+                    self.__setzeRemoteZug(parts[1], parts[2])
+                    continue
+                if len(parts) >= 3 and parts[0] == "PROMO":
+                    self.__setzeRemotePromo(parts[1], parts[2])
+
+    def __sendeNetzMessage(self, text:str):
+        '''
+        Vor.: -text- ist eine  Nachrichtenzeile ohne Zeilenumbrüche.
+        Eff.: Sendet die Nachricht an den verbundenen Rechner, falls die Verbindung aktiv ist.
+        Erg.: -
+        '''
+        if not(self.__netzAktiv) or not(self.__netzVerbundenEvent.is_set()):
+            return
+        if self.__netzSock == None:
+            return
+        self.__netzSock.sendall((text + "\n").encode("utf-8"))
+
+    def __setzeRemoteZug(self, startLabel:str, targetLabel:str):
+        '''
+        Vor.: -startLabel- und -targetLabel- sind gueltige Feldbezeichnungen.
+        Eff.: Der Zug welcher ensteht, wenn das Feld mit der Bezeichnung -startLabel- und dann dem Feld mit der Bezeichnung -targetLabel- anklickt und das Brett fuer das Team gerade Bewegungsaufforderungen annimmt ist umgesetzt.
+            Auch ist das Brett -image- aktualisiert.
+        Erg.: -
+        '''
+        startPos = self.__getClickPosByLabel(startLabel)
+        targetPos = self.__getClickPosByLabel(targetLabel)
+        if startPos == None or targetPos == None:
+            return
+        self.__wendeRemoteZugAn = True
+        if self.__resignDialog.getIfShown():
+            self.__resignDialog.hideSurface()
+        self.handleLeftClickEvent(startPos)
+        self.handleLeftClickEvent(targetPos)
+        self.__wendeRemoteZugAn = False
+        self.__generateImage()
+
+    def __getClickPosByLabel(self, fieldLabel:str)->tuple[int, int]|None:
+        '''
+        Vor.: -fieldLabel- ist eine gueltige Feldbezeichnungen. Brett ist ohne zusaetzliche Verschiebung durch nachtraegliche Einwirkung auf dem Bildschirm abgebildet.
+        Eff.: -
+        Erg.: Die Mittelpunktkordinate des Feldes auf dem Bildschirm ist als tuple geliefert, wobei der erste Wert fuer die X-Kordinate steht und die zweite fuer die Y-Kordinate. 
+        '''
+        field = self.__fields.get(fieldLabel)
+        if type(field) != Feld:
+            return None
+        fieldRect = field.getRect()
+        return (int(self.rect.x + fieldRect.centerx), int(self.rect.y + fieldRect.centery))
+
+    def __setzeRemotePromo(self, fieldLabel:str, pieceName:str):
+        '''
+        Vor.: -fieldLabel- ist eine gueltige Feldbezeichnung, -pieceName- ein bekannter Figurtyp.
+        Eff.: Eine empfangene Bauernumwandlung auf dem angegebenen Feld ist ausgefuert und das Brett -image- ist aktualiesiert.
+        Erg.: -
+        '''
+        field = self.__fields.get(fieldLabel)
+        if type(field) != Feld:
+            return
+        figure = field.getFigure()
+        if type(figure) != Bauer:
+            return
+        if pieceName == "TURM":
+            if figure.getTeam() == 0:
+                field.setFigure(self.__whiteTower)
+            else:
+                field.setFigure(self.__blackTower)
+        elif pieceName == "LAEUFER":
+            if figure.getTeam() == 0:
+                field.setFigure(self.__whiteBishop)
+            else:
+                field.setFigure(self.__blackBishop)
+        elif pieceName == "SPRINGER":
+            if figure.getTeam() == 0:
+                field.setFigure(self.__whiteKnight)
+            else:
+                field.setFigure(self.__blackKnight)
+        elif pieceName == "DAME":
+            if figure.getTeam() == 0:
+                field.setFigure(self.__whiteQueen)
+            else:
+                field.setFigure(self.__blackQueen)
+        else:
+            return
+        self.__generateImage()
+
 
     
     def restartGame(self):
+        '''
+        Vor.: -
+        Eff.: Der Spielzustand ist zurueck gesetzt und eine neue Partie gestartet.
+        Erg.: -
+        '''
         self.__reset_game_state()
+        if self.__netzAktiv:
+            self.__ready = True
         self.start()
     
     def getFieldRow(self, RowNumber:int)->list[Feld]:
+        '''
+        Vor.: -RowNumber- ist eine gueltige Reihen-ID des Brettes.
+        Eff.: -
+        Erg.: Eine Liste mit allen Feldern der angegebenen Reihe ist geliefert.
+        '''
         RowFields = []
         for i in range(self.__fields_count):
             letter = chr(ord(self.__field_label_start_letter)+i)
@@ -61,6 +538,11 @@ class Brett(pygame.sprite.Sprite):
         return RowFields
     
     def setupDialogGroup(self):
+        '''
+        Vor.: -
+        Eff.: Ein Dialog fuer Aktionen zum Aufgeben/beenden das Spiels in der Variable -self.__resignDialog- ist erstellt und ist der Spritegruppe in der Variable -self.__DialogGroup- hinzugefuegt.
+        Erg.: -
+        '''
         self.__DialogGroup.empty()
         self.__resignDialog = Dialog(
             self.rect.width, self.rect.height, 
@@ -75,6 +557,12 @@ class Brett(pygame.sprite.Sprite):
         self.__DialogGroup.add(self.__resignDialog)
 
     def __reset_game_state(self):
+        '''
+        Vor.: -
+        Eff.: Figuren/Feldgruppen sind geleert und die Felder neuinitialisiert.
+            Das hat meistens Auswirkungen auf das Brett -image- haben kann, weil die dort evtl. befundenen Elemente/Effekte nun nicht mehr dargestellt sind.
+        Erg.: -
+        '''
         self.__DialogGroup.empty()
         self.__fieldsGroup.empty()
         
@@ -97,13 +585,25 @@ class Brett(pygame.sprite.Sprite):
         self.__generateImage()
 
     def start(self)->None:
+        '''
+        Vor.: Das Brett ist bereit zum Starten.
+        Eff.: das Spiel ist auf aktiv und die Variable -self.__eventMode- ist in den Auswahlmodus gesetzt.
+        Erg.: -
+        '''
         if self.__running:
             raise Exception("Bereits gestartet!")
+        if not(self.__ready):
+            return
         self.__running = True
         self.__eventMode = "chooseFigure"
 
     def __setupBrett(self)->None:
-        #Wird später sauberer geschrieben !!!
+        '''
+        Vor.: Das Feldraster ist initialisiert.
+        Eff.: Figureninstanzen (self.__blackTower, self.__whiteTower, self.__blackQueen, self.__whiteQueen, self.__blackKnight, self.__whiteKnight, self.__blackBishop, self.__whiteBishop, self.__blackKing, self.__whiteKing) 
+            sind beschrieben und die Startaufstellung ist gesetzt.
+        Erg.: -
+        '''
         self.__FigureScale:float = 0.9
         self.__blackTower = Turm("assets/graphics/s_turm.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1)
         self.__whiteTower = Turm("assets/graphics/w_turm.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0)
@@ -118,7 +618,7 @@ class Brett(pygame.sprite.Sprite):
         self.__whiteBishop = Laeufer("assets/graphics/w_laeufer.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0)
         
         self.__blackKing = Koenig("assets/graphics/s_koenig.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 1)
-        self.__whiteKing= Koenig("assets/graphics/w_koenig.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0)
+        self.__whiteKing = Koenig("assets/graphics/w_koenig.png", self.__field_length*self.__FigureScale, self.__field_length, self.__fields_count, self.__field_label_start_letter, 0)
         
         self.__fields["a8"].setFigure(self.__blackTower)
         self.__fields["h8"].setFigure(self.__blackTower)
@@ -148,6 +648,11 @@ class Brett(pygame.sprite.Sprite):
         self.__fields["e1"].setFigure(self.__whiteKing)
 
     def __buildPawnRow(self, RowNumber:int, scale:float, texturePath:str, teamID:int) -> None:
+        '''
+        Vor.: Parameter beschreiben eine gueltige Reihe und Figurenkonfiguration.
+        Eff.: Die angegebene Reihe, mit Bauern des Teams mit der -teamID-, ist in den Datensaetzen befuellt. Das Brett -self.image- ist nicht aktualisiert.
+        Erg.: -
+        '''
         for i in range(self.__fields_count):
             fieldLabelLetter:str = chr(ord(self.__field_label_start_letter)+i)
             fieldLabel:str = fieldLabelLetter + str(RowNumber)
@@ -155,21 +660,41 @@ class Brett(pygame.sprite.Sprite):
             targetField.setFigure(Bauer(texturePath, self.__field_length*scale, self.__field_length, self.__fields_count, self.__field_label_start_letter, teamID))
 
     def setRotation(self, rotation:int)->None:
+        '''
+        Vor.: -rotation- ist ein Vielfaches von 90 Grad oder 0 und Feldobjekte sind bereits vorhanden.
+        Eff.: Die Brettrotation ist auf -rotation- gesetzt und Feldpositionen sind korriegiert und nun ist das Brett mit der angegebenden Rotation in -self.image- beschrieben.
+        Erg.: -
+        '''
         if rotation % 90 != 0:
             raise Exception("Rotation not available!")
         self.__rotation:int = rotation
         self.__correctFieldPositions()
 
     def getRotation(self)->int:
+        '''
+        Vor.: -
+        Eff.: -
+        Erg.: Die aktuelle Brettrotation in Grad ist geliefert.
+        '''
         return self.__rotation
     
     def __correctFieldPositions(self)->None:
+        '''
+        Vor.: Feldobjekte sind vorhanden.
+        Eff.: Berechnet und setzt die aktuelle Position aller Felder neu. Das Brett -self.image- ist nun neugeneriert.
+        Erg.: -
+        '''
         for key in self.__fields.keys():
             currentField:Feld = self.__fields[key]
             currentField.setFieldPosition(self.__getFieldPositionByName(key))
         self.__generateImage()
 
     def __createFields(self)->dict:
+        '''
+        Vor.: Brettparameter sind gesetzt.
+        Eff.: Die Feldobjekte sind erstellt.
+        Erg.: Ein Dictionary mit Feldlabeln als Keys und Feldobjekten als Werten ist geliefert.
+        '''
         fields:dict = {}
         for spread in range(ord(self.__field_label_start_letter), ord(self.__field_label_start_letter)+self.__fields_count):
             for lengths in range(1, 1+self.__fields_count):
@@ -183,6 +708,11 @@ class Brett(pygame.sprite.Sprite):
         return fields
     
     def __getFieldPositionByName(self, field_name:str)->tuple[int, int]:
+        '''
+        Vor.: -field_name- ist eine gültige Feldbezeichnung.
+        Eff.: -
+        Erg.: Die Feldposition innerhalb des Brettbildes ist als Tupel (x, y) ist geliefert.
+        '''
         lengthID = int(ord(field_name[0])-ord(self.__field_label_start_letter))
         spreadID = int(field_name[1])
 
@@ -199,12 +729,27 @@ class Brett(pygame.sprite.Sprite):
         return x, y
     
     def __rotatePoint90degree(self, point:tuple[int, int])->tuple[int, int]:
+        '''
+        Vor.: -point- ist eine Koordinate als Tuple (x, y) im Brettsystem.
+        Eff.: -
+        Erg.: Die Koordinate, welche die Position beschreibt, wenn das Brett um 90 Grad gedreht ist, ist geliefert.
+        '''
         return (self.__edge_length-point[1]-self.__field_length, point[0])
     
     def __getFieldsGroup(self)->pygame.sprite.Group:
+        '''
+        Vor.: -
+        Eff.: -
+        Erg.: Die Sprite-Gruppe der Felder ist geliefert (-self.__fieldsGroup-).
+        '''
         return self.__fieldsGroup
     
     def __createFieldsGroup(self)->pygame.sprite.Group:
+        '''
+        Vor.: Feldobjekte sind korrekt erstellt. self.__fields sind allle Werte Sprites. 
+        Eff.: -
+        Erg.: Eine erzeugte Sprite.Group mit allen Sprites aus dem Werten von -self.__fields- ist geliefert.
+        '''
         fieldsGroup = pygame.sprite.Group()
         
         for key in self.__fields.keys():
@@ -214,9 +759,16 @@ class Brett(pygame.sprite.Sprite):
         return fieldsGroup
 
     def __generateImage(self) -> None:
+        '''
+        Vor.: Brettoberflaeche und Zeichenobjekte sind initialisiert.
+        Eff.: Momentan sichtbare Felder und sichtbare Dialoge auf der Brettoberflaeche sind in -self.image- als Surface beschrieben.
+        Erg.: -
+        '''
         self.image.fill("black")
         fieldsGroup = self.__getFieldsGroup()
         fieldsGroup.draw(self.image)
+        if len(self.__startDialogGruppe.sprites()) != 0:
+            self.__startDialogGruppe.draw(self.image)
         if self.__resignDialog.getIfShown():
             print("true")
             self.__DialogGroup.draw(self.image)
@@ -226,12 +778,44 @@ class Brett(pygame.sprite.Sprite):
         
         
     def update(self) -> None:
-        pass
+        '''
+        Vor.: -self.__nameDialog- ist None oder eine TextDialoginstanz.
+        Eff.: Wenn -self.__nameDialog- nicht None entspricht ist der TextDialog -self.__nameDialog- aktualisiert.
+        Erg.: -
+        '''
+        if self.__nameDialog != None:
+            self.__nameDialog.update()
+        if self.__ipDialog != None:
+            self.__ipDialog.update()
 
     def __CheckIfIsNotAFeldInstance(self, testObject:object) ->bool:
+        '''
+        Vor.: -testObject- ist ein beliebiges Objekt.
+        Eff.: -
+        Erg.: falls -testObject- kein Feld ist -True- geliefert, sonst ist -False- geliefert.
+        '''
         return type(testObject) != Feld
     
     def handleLeftClickEvent(self, pos:tuple[int, int])->None:
+        '''
+        Vor.: -pos- ist eine gueltige Mausposition in Pixeln und das Brett ist auf dem Screen ohne zusaetzliche Verschiebungen ausgegeben.
+        Eff.: Ein Klick an der Position -pos- ist als Linksklick verarbeitet, dadurch konnten Figuren fuer ein Zug gesetzt, ausgewehlt werden, mit einen Dialogfenster interagiert werden oder auch ein Hinweis ausgeben werden, alls das ist ggf. abhaengig von -self.__eventMode- 
+            self.image ist aktualiesiert.
+        Erg.: -
+        '''
+        if self.__modusDialog != None and self.__modusDialog.getIfShown() and self.__modusDialog in self.__startDialogGruppe:
+            self.__modusDialog.handleLeftClick(pos)
+            return
+        if self.__nameDialog != None and self.__nameDialog.getIfShown() and self.__nameDialog in self.__startDialogGruppe:
+            self.__nameDialog.handleLeftClick(pos)
+            return
+        if self.__ipDialog != None and self.__ipDialog.getIfShown() and self.__ipDialog in self.__startDialogGruppe:
+            self.__ipDialog.handleLeftClick(pos)
+            return
+        if self.__netzStatusDialog != None and self.__netzStatusDialog.getIfShown() and self.__netzStatusDialog in self.__startDialogGruppe and not(self.__netzVerbundenEvent.is_set()):
+            self.__netzStatusDialog.handleLeftClick(pos)
+            return
+
         if self.__resignDialog.getIfShown():
             self.__resignDialog.handleLeftClick(pos)
             return
@@ -244,6 +828,9 @@ class Brett(pygame.sprite.Sprite):
                 PromoteDialog.handleLeftClick(pos)
                 return
         if not(self.__running):
+            return
+
+        if self.__netzAktiv and self.__onTurnTeam != self.__meinTeam and not(self.__wendeRemoteZugAn):
             return
         
         clickedField = self.getFieldByCords(pos)
@@ -268,15 +855,59 @@ class Brett(pygame.sprite.Sprite):
         print(f"Didn't found the Event for the current EventMode: {self.__eventMode}")
 
     def handleRightClickEvent(self, pos:tuple[int, int])->None:
+        '''
+        Vor.: -pos- ist eine gueltige Mausposition in Pixeln.
+        Eff.: Oeffnet den Ingame-Dialog. Die Brett.image Surface ist aktualiesiert.
+        Erg.: -
+        '''
+        if not(self.__ready):
+            return
         if not(self.__resignDialog.getIfShown()):
             self.__resignDialog.showSurface()
             self.__generateImage()
 
+    def handleKeyDownEvent(self, event:pygame.event.Event)->None:
+        '''
+        Vor.: -event- ist ein gueltiges pygame KEYDOWN-Event.
+        Eff.: Die Tastatureingaben ist an den Nameneingabedialog weitergeleitet, wenn dieser geofnet ist. Damit der Buchstabe korrekt in der Namenseingabe beim Nameneingabefeld angezeigt werden kann.
+        Erg.: -
+        '''
+        if self.__nameDialog != None and self.__nameDialog.getIfShown():
+            self.__nameDialog.handleKeyDown(event)
+        if self.__ipDialog != None and self.__ipDialog.getIfShown():
+            self.__ipDialog.handleKeyDown(event)
+
     def __resetCursorAndSetEventMode(self, eventMode:str):
+        '''
+        Vor.: -eventMode- ist ein gueltiger Eventmodus.
+        Eff.: der Cursor (self.__cursor) ist zurueck gesetzt und setzt den uebergebenen Eventmodus fuer Eingaben um an der Variable (self.__eventMode).
+        Erg.: -
+        '''
         self.__cursor = None
         self.__eventMode = eventMode
     
     def __getMatchingTurnData(self, startField:Feld, targetField:Feld)->dict|None:
+        '''
+        Vor.: -startField- und -targetField- sind gueltige Felder.
+        Eff.: -
+        Erg.: Das passende ZugdatenDictionary oder -None- ist geliefert.
+            Das evtl. gelieferte passende ZugdatenDictionary besteht aus:
+                "" steht fuer den Key und das hinter dem = fuer die Erklaerung des Values
+                "point" = :tuple[int, int] (gueltige Feldbezeichnung, die relativ zu -originFieldLabel- die Anzahl der Felder angibt, die fuer einen Zug in Buchstaben und Zahlen Richtung noetig sind)
+                "fieldLabel" = :str eine gueltige Feldbezeichnung (das erste Zeichen ist ein Buchstabe im Berreich des Buchstaben der Anfangsbeschriftungs und dem Buchstaben der Anfangsbeschriftungs versetzt um die Feldanzahl / das zweite Zeichen ist eine Zahl im Berreich der Zahl der Anfangsbeschriftungs und der Zahl der Anfangsbeschriftungs versetzt um die Feldanzahl) zu dem sich die Figur bewegen soll.
+                "onlyOnKill" = :bool (-True-, wenn die Figur nur den Zug machen kann, wenn sie dabei eine andere Figur schlagen wuerde)
+                "canKill" = :bool (-True-, wenn die Figur beim Zug auf das Zielfeld eine andere Figur schlagen koennte)
+                "killMaybeFigureType" =  (Klasse der Figur, die geschlagen werden kann)
+                "killMaybeFigureField" = :str (Feldbezeichnung des Feldes, auf dem eine Figur geschlagen werden kann)
+                "killMaybeFigureMustHadDoubleWalkLastTurn" = :bool (beschreibt, ob die Figur, die geschlagen werden kann, im letzten Zug einen Doppelzug gemacht hat)
+                "hasAnxiety" = :boool oder immer True, wenn die Figur die Koenigsrolle traegt (beschreibt, ob die Figur auf dem Zeilfeld des Zuges geschlagen werden koennte)
+                "specialTurnType" = :str (spezielle Zugbezeichnung)
+                "needFigureOnField" = :str (Zug ist nur moeglich, wenn auf dem Feld eine Figur steht und ein anderes Feld angegeben ist)
+                "neededFigureType" =  (ueberprueft, ob der Zug einer bestimmten hier angegebender Figur als Figurklasse mit der Figur auf dem Feld uebereinstimmt)
+                "allowNeededFigureHasTurned" = :bool (beschreibt, ob sie die Figur auf dem Feld -needFigureOnField- schon bewegt hat)
+                "endPointNeededFigure" = :str (Feldbezeichnung, auf dem die Firgur nach dem Zug steht)
+                "onDoneTurnCall" = :Callable (beschreibt die Methode/Funktion, die nach dem Zug ausgefuerht wird)
+        '''
         FullTurnDataFromStartField:list[dict] = self.getPossibleTurnFieldsFullData(startField)
         for Data in FullTurnDataFromStartField:
             if Data["fieldLabel"] == targetField.getLabel():
@@ -284,6 +915,16 @@ class Brett(pygame.sprite.Sprite):
         return None
 
     def __setFigureEvent(self, clickedField:Feld)->None:
+        '''
+        Vor.: -clickedField- ist ein gueltiges Feldobjekt.
+        Eff.: Das setzen eines Zuges ist ausgefuehrt, wenn das -clickedField- ein gueltiger Zug, fuer die Figur des auf dem Feld, welches in -self.__cursor- gespeichert, ist. 
+            Wenn sich das Brett im Netzwerkbetrieb befindet ist die Bewegung an den anderen Rechner weitergeleitet.
+            Nach dem Zug ist der self.__eventMode zu "chooseFigure" geändert und der andere Spieler ist an der Reihe, außer das Spiel ist durch den Zug beendent, weil ein Patt oder ein Matt ausgeloest wurde.
+            In diesem Fall ist die Situation in der Konsole beschrieben und beim Matt sind alle Felder einzeln umrandet und mit einem gruenen Punkt versehen.
+            Bei einer Pattsituation sind nur alle Felder, jeweils grün eingeramt.
+            Auch ist, dann das Brett.image aktualiesiert.
+        Erg.: -
+        '''
         self.__clearAllFieldHighlights()
         if self.__chooseFigureEvent(clickedField):
             return
@@ -331,6 +972,9 @@ class Brett(pygame.sprite.Sprite):
                         elif matchingTurnData["killMaybeFigureMustHadDoubleWalkLastTurn"] and killMaybeFigure.hasDidDoubleWalkInTurn(self.__turnNumber-1):
                             killMaybeFigureField.setFigure(None)
 
+        startLabel = self.__cursor.getLabel()
+        targetLabel = clickedField.getLabel()
+
         clickedField.setFigure(beforeCursorFigur)
         self.__cursor.setFigure(None)
 
@@ -344,20 +988,55 @@ class Brett(pygame.sprite.Sprite):
 
         beforeCursorFigur.moved()
         self.__finishTurn()
+        if self.__netzAktiv and not(self.__wendeRemoteZugAn):
+            self.__sendeNetzMessage(f"MOVE;{startLabel};{targetLabel}")
     
     def __promoteTower(self):
-        self.__doPromote(self.__whiteTower, self.__blackTower)
+        '''
+        Vor.: Ein Bauer steht zur Umwandlung bereit.
+        Eff.: Der Bauer, welcher in der Liste der zu Umwandelbarenbauern hinten steht ist in einen Turm, des seines gleichen Teams, umgewandelt.
+                Und der andere Spieler ist an der Reihe.
+        Erg.: -
+        '''
+        self.__doPromote(self.__whiteTower, self.__blackTower, "TURM")
     
     def __promoteBishop(self):
-        self.__doPromote(self.__whiteBishop, self.__blackBishop)
+        '''
+        Vor.: Ein Bauer steht zur Umwandlung bereit.
+        Eff.: Der Bauer, welcher in der Liste der zu Umwandelbarenbauern hinten steht ist in einen Laeufer, des seines gleichen Teams, umgewandelt.
+                Und der andere Spieler ist an der Reihe. Das -image- ist aktualiesiert.
+        Erg.: -
+        '''
+        self.__doPromote(self.__whiteBishop, self.__blackBishop, "LAEUFER")
     
     def __promoteKnight(self):
-        self.__doPromote(self.__whiteKnight, self.__blackKnight)
+        '''
+        Vor.: Ein Bauer steht zur Umwandlung bereit.
+        Eff.: Der Bauer, welcher in der Liste der zu Umwandelbarenbauern hinten steht ist in einen Springer, des seines gleichen Teams, umgewandelt.
+                Und der andere Spieler ist an der Reihe. Das -image- ist aktualiesiert.
+        Erg.: -
+        '''
+        self.__doPromote(self.__whiteKnight, self.__blackKnight, "SPRINGER")
 
     def __promoteQueen(self):
-        self.__doPromote(self.__whiteQueen, self.__blackQueen)
+        '''
+        Vor.: Ein Bauer steht zur Umwandlung bereit.
+        Eff.: Der Bauer, welcher in der Liste der zu Umwandelbarenbauern hinten steht ist in einen Dame, des seines gleichen Teams, umgewandelt.
+                Und der andere Spieler ist an der Reihe. Das -image- ist aktualiesiert.
+        Erg.: -
+        '''
+        self.__doPromote(self.__whiteQueen, self.__blackQueen, "DAME")
 
-    def __doPromote(self, Team0Figure, Team1Figure):
+    def __doPromote(self, Team0Figure, Team1Figure, promotionName:str):
+        '''
+            Vor.: Es existiert ein aktiver Promotion-Kontext in der Liste -__PawnPromotes-. 
+            Team0Figure ist eine Figur instanz, welche beschreibt zu welche Figure auf dem Feld des Bauern für Team 0 auf dem Feld des Bauern zu setzten ist. 
+            Team1Figure ist eine Figur instanz, welche beschreibt zu welche Figure auf dem Feld des Bauern für Team 1 auf dem Feld des Bauern zu setzten ist. 
+            promotionName ist eine gueltige Netzwerkbezeichnung des Schachprotokolls, welche die Promotion beschreibt.
+        Eff.: Der Bauer, welcher in der Liste der zu Umwandelbarenbauern hinten steht ist in eine, des seines gleichen Teams, umgewandelt.
+                Und der andere Spieler ist an der Reihe. Das -image- ist aktualiesiert. Wenn das Brett in Netzwerkmodus ist, ist die Promotion, dem anderen Schachbrett mitgeteilt.
+        Erg.: -
+        '''
         promoteData = self.__PawnPromotes[-1]
         promoteField:Feld = self.__fields[promoteData["Label"]]
         promoteDialog:Dialog = promoteData["Dialog"]
@@ -368,12 +1047,27 @@ class Brett(pygame.sprite.Sprite):
         promoteDialog.hideSurface()
         promoteDialog.kill()
         self.__PawnPromotes.pop(-1)
+        if self.__netzAktiv and not(self.__wendeRemoteZugAn):
+            self.__sendeNetzMessage(f"PROMO;{promoteField.getLabel()};{promotionName}")
 
     def __finishTurn(self):
+        '''
+        Vor.: Ein regelkonformer Zug wurde ausgefuehrt.
+        Eff.: Promotion/Matt/Remis sind ueberprueft und erzeugen die jeweiligen grafischen Aenderungen.
+            Der self.__eventMode ist zu "chooseFigure" geändert und der andere Spieler ist an der Reihe, außer das Spiel ist durch den Zug beendent, weil ein Patt oder ein Matt ausgeloest wurde.
+            In diesem Fall ist die Situation in der Konsole beschrieben und beim Matt sind alle Felder einzeln umrandet und mit einem gruenen Punkt versehen.
+            Bei einer Pattsituation sind nur alle Felder, jeweils grün eingeramt.
+            Auch ist, dann das Brett.image aktualiesiert.
+            Wenn eine Bauerentwicklungsmoeglichkeit erkannt wurde ist ein neues Dialogfenster auf der -self.image- Surface gezeichnet mit der Interaktionsmoeglichkeit auszuwaehlen, zu was sich der Bauer entwickeln soll.
+            der aktualisiert Spielzustand ist aktualiesiert und der andere Spieler ist nun an der Reihe, wenn keine Eingaben mehr von dem Spieler zu den Zug benoetigt wurden.
+        Erg.: -
+        '''
         for row in [1, 8]:
             for field in self.getFieldRow(row):
                 if type(field.getFigure()) == Bauer:
                     print("DETECT PROMOTE PAWN" + field.getLabel())
+                    if self.__netzAktiv and self.__wendeRemoteZugAn:
+                        continue
                     PromoteInfos = {}
                     PromoteInfos["Dialog"] = Dialog(
                         self.rect.width, self.rect.height, 
@@ -415,6 +1109,11 @@ class Brett(pygame.sprite.Sprite):
             print("Remis, durch keine Zugmöglichkeit mehr!")
     
     def checkIfTeamCanMove(self, team:int):
+        '''
+        Vor.: -team- ist eine gueltige Team-ID.
+        Eff.: -
+        Erg.: -True- ist geliefert, wenn das Team mindestens einen legalen Zug hat, sonst ist -False- geliefert.
+        '''
         for field in self.__fields.values():
             if type(field) != Feld:
                 continue
@@ -427,6 +1126,12 @@ class Brett(pygame.sprite.Sprite):
         return False
 
     def checkIfMate(self)->list[int]:
+        '''
+        Vor.: -
+        Eff.: -
+        Erg.: Eine Liste mattgesetzter Teams oder [-1], falls kein Matt vorliegt.
+            Matt bedeutet, dass eine Figur mit Koenigsrolle bedroht wird und kein Zug durchgefuert werden kann, welche dafuer sorgt, dass dies nicht mehr der Fall ist.
+        '''
         checkedTeams = self.__getCheckedTeams()
         if len(checkedTeams) == 0:
             return [-1]
@@ -441,6 +1146,11 @@ class Brett(pygame.sprite.Sprite):
         return matedTeams
     
     def __getKingFieldsInDanger(self)->list[Feld]:
+        '''
+        Vor.: -self.fields- ist eine Liste mit ausschließlichen Feldinstanzen des eigenen Brettes.
+        Eff.: -
+        Erg.: Eine Liste aller Figuren mit Koenigsrolle, welche von anderen Figuren im naechsten gegnerischen Zug geschlagen werden koennten, ist geliefert.
+        '''
         KingFields:list[Feld] = self.__getFieldsWithKings()
         checkedKings:list[int] = []
         for KingField in KingFields:
@@ -449,6 +1159,11 @@ class Brett(pygame.sprite.Sprite):
         return checkedKings 
     
     def __getCheckedTeams(self)->list[int]:
+        '''
+        Vor.: -
+        Eff.: -
+        Erg.: Eine Liste aller Teams, deren Figur mit Koenigsrolle aktuell im Schach steht, ist geliefert.
+        '''
         KingFieldsInDanger:list[Feld] = self.__getKingFieldsInDanger()
         checkedTeams:list[int] = []
         for CheckedKingFeld in KingFieldsInDanger:
@@ -461,10 +1176,15 @@ class Brett(pygame.sprite.Sprite):
         return checkedTeams 
     
     def __getDangerFieldsWhenMove(self, targetField:Feld, OriginField:Feld)->list[Feld]:
+        '''
+        Vor.: -OriginField- enthaelt eine Figur und beide Felder sind Feldinstanzen aus -self.fields-.
+        Eff.: -
+        Erg.: Eine Liste bedrohender Felder nach dem simulierten Zug ist geliefert.
+        '''
         resultingDangerFields:list[Feld] = [] 
         MovingFigure = OriginField.getFigure()
         if MovingFigure == None:
-            raise Exception("There must be a Figure on OriginField!")
+            raise Exception("ERROR: Es muss schon ne Figur auf dem Ursprungsfeld stehen (__getDangerFieldsWhenMove)")
         
         targetFieldFigur = targetField.getFigure()
 
@@ -482,6 +1202,11 @@ class Brett(pygame.sprite.Sprite):
         return resultingDangerFields
     
     def __getDangerFieldsToTheField(self, testForField:Feld, TeamID:int|None = None)->list[Feld]:
+        '''
+        Vor.: -testForField- ist ein gueltiges Feld, -TeamID- optional eine Team-ID.
+        Eff.: -
+        Erg.: Eine Liste aller Felder, deren Figuren das Zielfeld bedrohen, ist geliefert.
+        '''
         resultingDangerFields:list[Feld] = [] 
         FieldFigure = testForField.getFigure()
         if TeamID == None:
@@ -512,6 +1237,11 @@ class Brett(pygame.sprite.Sprite):
         return resultingDangerFields
 
     def __getFieldsWithKings(self)->list[Feld]:
+        '''
+        Vor.: -
+        Eff.: -
+        Erg.: Eine Liste aller Felder auf dem eine Figur mit Koenigsrolle steht ist geliefert.
+        '''
         fieldsWithKings:list[Feld] = []
         for field in self.__fields.values():
             if type(field) != Feld:
@@ -524,16 +1254,25 @@ class Brett(pygame.sprite.Sprite):
         return fieldsWithKings
     
     def __switchToOtherPlayer(self)->None:
+        '''
+        Vor.: -
+        Eff.: Das aktive Team ist gewechselt.
+        Erg.: -
+        '''
         self.__onTurnTeam = (self.__onTurnTeam+1)%2
 
     def __chooseFigureEvent(self, clickedField:Feld)->bool:
+        '''
+        Vor.: -clickedField- ist ein gueltiges Feld.
+        Eff.: Wenn auf -clickedField- eine Figur steht, welche der aktuelle Spieler bewegen darf sind moegliche Ziele von der Figur -clickedField- markiert und der Eventmodus ist auf setFigure angepasst.
+        Erg.: -True- ist geliefert, wenn eine waehlbare Figur aktiviert wurde, sonst ist -False- geliefert.
+        '''
         clickedFigure:None|Springer|Turm|Bauer|Laeufer|Dame|Koenig = clickedField.getFigure()
         clickedFieldLabel:str = clickedField.getLabel()
         if clickedFigure == None:
             self.__clearAllFieldHighlights() 
             self.__eventMode = "chooseFigure"
             return False
-        # clickedFigure ist ab jetzt Aufjedenfall eine Figur
 
         if clickedFigure.getTeam() != self.__onTurnTeam:
             self.__eventMode = "chooseFigure"
@@ -546,6 +1285,11 @@ class Brett(pygame.sprite.Sprite):
         return True
 
     def __clearAllFieldHighlights(self)->None:
+        '''
+        Vor.: -
+        Eff.: Alle Hervorhebungen von Feldern aus -self.fields- sind entfernt.
+        Erg.: -
+        '''
         for key in self.__fields.keys():
             field = self.__fields[key]
             if type(field) != Feld:
@@ -553,6 +1297,12 @@ class Brett(pygame.sprite.Sprite):
             field.clearFieldHighlights()
 
     def getPossibleTurnFields(self, Field:Feld, ignoreChecksOrAnxiety:bool=False, ignoreBuildingChecks:bool=False, ignoreCastling:bool=False)->list[Feld]:        # Geht sicher, dass nicht doch irgendwie Ein Feld außerhalb des Brettes ist arbeitet noch Relative
+        '''
+        #HIER WEITERMACHEN MIT SPEZIFIZIEREN
+        Vor.: -Field- ist ein gueltiges Feld; die bool Flags steuern Filterregeln.
+        Eff.: -
+        Erg.: Eine Liste aller moeglichen Zielfelder fuer den Zug ist geliefert.
+        '''
         PossibleTurnFields = []
         relativePossibleTurnFields:list[dict] = self.getPossibleTurnFieldsFullData(Field, ignoreChecksOrAnxiety, ignoreBuildingChecks, ignoreCastling)
         for relativeField in relativePossibleTurnFields:
@@ -566,17 +1316,32 @@ class Brett(pygame.sprite.Sprite):
         return PossibleTurnFields
 
     def __markAllPosibleFields(self, FigureFieldLabel:str)->None:
+        '''
+        Vor.: -FigureFieldLabel- ist ein gueltiges Feldlabel mit waehlbarer Figur.
+        Eff.: Markiert alle moeglichen Zielfelder.
+        Erg.: -
+        '''
         for field in self.getPossibleTurnFields(self.__fields[FigureFieldLabel]):
             if type(field) == Feld:
                 field.addFieldHighlight("SmallGreenMiddleCircle")
             
-    def __getOnlyPointsList(self,TurnsDatas:list[dict])->list[tuple]:
+    def __getOnlyPointsList(self,TurnsDatas:list[dict])->list[tuple]: ## nicht genutzt
+        '''
+        Vor.: -TurnsDatas- ist eine Liste von Zugdaten-Dictionaries mit Key -point-.
+        Eff.: -
+        Erg.: Eine Liste der relativen Punkte ist geliefert. 
+        '''
         PointsList:list = []                      #
         for TurnData in TurnsDatas:               #
             PointsList.append(TurnData["point"])  # Zur Weiterverarbeitung sind nur noch die Relativen Punkte notwending 
         return PointsList
     
     def __getOnlyTurnDataWithValidFields(self, turnsData:list[dict])->list[dict]:
+        '''
+        Vor.: -turnsData- ist eine Liste potentieller Zugdaten.
+        Eff.: Filtert Zugdaten auf gueltige Zielfelder.
+        Erg.: Eine bereinigte Liste gueltiger Zugdaten ist geliefert.
+        '''
         turnDataValidFields = []
         for turnData in turnsData:
             turnTargetFieldLabel = turnData["fieldLabel"]
@@ -590,6 +1355,11 @@ class Brett(pygame.sprite.Sprite):
         return turnDataValidFields
 
     def __getTurnsNotKillingMatesFromTurnData(self, turnsData:list[dict], TeamID:int)->list[dict]:
+        '''
+        Vor.: -turnsData- ist eine Liste von Zugdaten, -TeamID- die Team-ID der zu ziehenden Figur.
+        Eff.: Entfernt Zuege, die eigene Figuren schlagen wuerden.
+        Erg.: Eine gefilterte Liste erlaubter Zugdaten ist geliefert.
+        '''
         turnDataNotKillingMates = []
         for turnData in turnsData:
             turnTargetFieldLabel = turnData["fieldLabel"]
@@ -608,6 +1378,11 @@ class Brett(pygame.sprite.Sprite):
         return turnDataNotKillingMates
 
     def getPossibleTurnFieldsFullData(self, startingPointField:Feld, ignoreChecksOrAnxiety:bool=False, ignoreBuildingChecks:bool=False, ignoreCastling:bool=False)->list[dict]:
+        '''
+        Vor.: -startingPointField- ist ein gueltiges Feld; Flags steuern Regelpruefungen.
+        Eff.: Ermittelt alle legalen Zugdaten.
+        Erg.: Eine Liste mit Zugdaten ist geliefert.
+        '''
         startFigure:None|Springer|Turm|Bauer|Laeufer|Dame|Koenig = startingPointField.getFigure()
         if startFigure == None:
             return []       # Ein Feld ohne Figur kann seine Figur nirgendwo hinsetzen
@@ -695,12 +1470,27 @@ class Brett(pygame.sprite.Sprite):
         return possibleRelativeFields
     
     def __getFieldLabelsPositionIDs(self, FieldLabel:str)->list[int, int]:
+        '''
+        Vor.: -FieldLabel- ist eine gueltige Feldbezeichnung.
+        Eff.: -
+        Erg.: Die Positions-IDs [Buchstabe als ord, Zahl] sind geliefert.
+        '''
         return [ord(FieldLabel[0]), int(FieldLabel[1])]
     
     def __getLabelByPositionIDs(self, PositionIDs:list[int, int])->str:
+        '''
+        Vor.: -PositionIDs- enthaelt gueltige Buchstaben-/Zahlen-IDs.
+        Eff.: -
+        Erg.: Das Feldlabel ist geliefert.
+        '''
         return chr(PositionIDs[0])+str(PositionIDs[1])
 
     def __getFieldsBetweenHorizontalVerticalOnly(self, startingField:Feld, targetField:Feld)->list[Feld]:
+        '''
+        Vor.: Start- und Zielfeld liegen auf einer gemeinsamen Zeile oder Spalte.
+        Eff.: -
+        Erg.: Alle dazwischenliegenden Felder ohne Endpunkte sind geliefert.
+        '''
         resultFieldList:list[Feld] = []
         startFieldPositionIDs:list[int, int] = self.__getFieldLabelsPositionIDs(startingField.getLabel())
         targetFieldPositionIDs:list[int, int] = self.__getFieldLabelsPositionIDs(targetField.getLabel())
@@ -729,6 +1519,11 @@ class Brett(pygame.sprite.Sprite):
         return resultFieldList
 
     def __checkCastlingConditions(self, KingField:Feld, TargetField:Feld)->bool:
+        '''
+        Vor.: -KingField- und -TargetField- gehoeren zum Rochade-Kontext.
+        Eff.: Prueft freie Zwischenfelder und "Schachfreiheit", aslo keine Bedrohungen auf überschrittenen Feldern.
+        Erg.: -True- bei erfuellten Rochadebedingungen, sonst -False-.
+        '''
         FieldsBetween:list[Feld] = self.__getFieldsBetweenHorizontalVerticalOnly(KingField, TargetField)
         for Field in FieldsBetween:
             if Field.getFigure() != None:
@@ -742,6 +1537,11 @@ class Brett(pygame.sprite.Sprite):
         return True
 
     def __getTurnDataWithoutWalkThroughFigures(self, relativeMaybePossibleTurnsData:list[dict], startField:Feld)->list|list[dict]:
+        '''
+        Vor.: -relativeMaybePossibleTurnsData- enthaelt lineare Zugmuster, -startField- ist gueltig.
+        Eff.: Sortiert Zuglinien nach Richtung und kuerzt sie an blockierenden Figuren.
+        Erg.: Eine Liste mit erreichbaren Zugdaten ohne Durchlaufen von Figuren ist geliefert.
+        '''
         xLine:list = []
         yLine:list = []
         DiagonalXandY:list = []
@@ -804,20 +1604,40 @@ class Brett(pygame.sprite.Sprite):
         return resultLine
     
     def __getPointFromDict(self, DataDict:dict)->tuple:
+        '''
+        Vor.: -DataDict- besitzt den Key -point-.
+        Eff.: -
+        Erg.: Der zugehoerige Punkt als Tupel ist geliefert.
+        '''
         return DataDict['point']
     
     def __sortToDestination(self, Line:list[dict], sortIndex:int)->list[list[dict]]:
+        '''
+        Vor.: -Line- ist eine Liste von Zugdaten mit Punktwerten.
+        Eff.: Sortiert Linie in zwei Richtungen.
+        Erg.: Zwei richtungsgetrennte, sortierte Teillisten sind geliefert.
+        '''
         Line.sort(key=self.__getPointFromDict)
         Line = self.__SpitNegativePoints(Line, sortIndex)
         return self.__reverseFirstPart(Line)
     
     def __reverseFirstPart(self, Line:list)->list:
+        '''
+        Vor.: -Line- enthaelt zwei Teillisten.
+        Eff.: Dreht die erste Teilliste um.
+        Erg.: Das Tupel aus erster und zweiter Teilliste ist geliefert.
+        '''
         firstPartLine = Line[0]
         if type(firstPartLine) == list:
             firstPartLine.reverse()
         return firstPartLine, Line[1]
     
     def __SpitNegativePoints(self, Line:list[dict], SplitNumberIndex:int)->list[list, list]:
+        '''
+        Vor.: -Line- enthaelt Zugdaten mit numerischen Punktwerten.
+        Eff.: Trennt Eintraege nach negativem/nicht-negativem Wert am gegebenen Index.
+        Erg.: Zwei Listen (negativ | nicht-negativ) sind geliefert.
+        '''
         LinePositives = []
         LineNegatives = []
 
@@ -829,6 +1649,11 @@ class Brett(pygame.sprite.Sprite):
         return LineNegatives, LinePositives
 
     def getRelativeField(self, fieldLabel:str, relativeField:tuple[int, int])->Feld|None:
+        '''
+        Vor.: -fieldLabel- ist ein Startlabel, -relativeField- ein relativer Versatz.
+        Eff.: -
+        Erg.: Das relative Zielfeld oder -None- bei Ungueltigkeit ist geliefert.
+        '''
         startFieldX:int = ord(fieldLabel[0])
         startFieldY:int = int(fieldLabel[1])
         try:
@@ -841,6 +1666,11 @@ class Brett(pygame.sprite.Sprite):
             return None
 
     def getFieldByCords(self, pos:tuple[int, int])->Feld|None:
+        '''
+        Vor.: -pos- ist eine Pixelkoordinate.
+        Eff.: Ermittelt anhand der Koordinate das zugehoerige Feld.
+        Erg.: Das gefundene Feld oder -None- ist geliefert.
+        '''
         x:int = pos[0]-self.rect.topleft[0]
         y:int = pos[1]-self.rect.topleft[1]
         if not(self.rect.collidepoint(pos)):
@@ -865,7 +1695,6 @@ if __name__ == "__main__":
 
     TestBrettGroup = pygame.sprite.GroupSingle()
     Spielbrett = Brett(800, (1920/2-400, 1080/2-400), "white", "black")
-    Spielbrett.start()
     TestBrettGroup.add(Spielbrett)
 
     
@@ -876,6 +1705,8 @@ if __name__ == "__main__":
                 pygame.quit()
                 exit()
                 continue
+            if event.type == pygame.KEYDOWN:
+                Spielbrett.handleKeyDownEvent(event)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     startClick = time()

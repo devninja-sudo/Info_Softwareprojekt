@@ -91,6 +91,135 @@ class Dialog(pygame.sprite.Sprite):
                 self.__onVoidClick()
             if self.__closeable:
                 self.hideSurface()
+class TextInputDialog(pygame.sprite.Sprite):
+    def __init__(self, DialogWidth:int, DialogHeight:int, centerPosition:tuple[int], headline:str, headlineSize:int, inputSize:int, buttonText:str, buttonSize:int, closeable:bool, onSubmit:Callable|None=None, onVoidClick:Callable|None=None, posOffset:tuple[int, int]=(0,0), onSurfaceChange:Callable=None, maxInputLength:int=24):
+        super().__init__()
+        self.__initPhase = True
+        self.__width:int = DialogWidth
+        self.__height:int = DialogHeight
+        self.__centerPosition:tuple[int] = centerPosition
+        self.__headline:str = headline
+        self.__headlineSize:int = headlineSize
+        self.__inputSize:int = inputSize
+        self.__buttonText:str = buttonText
+        self.__buttonSize:int = buttonSize
+        self.__closeable:bool = closeable
+        self.__onSubmit:Callable|None = onSubmit
+        self.__onVoidClick:Callable|None = onVoidClick
+        self.__posOffset = posOffset
+        self.__onSurfaceChange = onSurfaceChange
+        self.__maxInputLength:int = maxInputLength
+        self.__isShown = True
+        self.__eingabeWert:str = ""
+        self.__cursorSichtbar:bool = True
+        self.__letzterCursorBlink = pygame.time.get_ticks()
+        self.makeSurface()
+        self.__initPhase = False
+
+    def __CallOnSurfaceChange(self):
+        if self.__onSurfaceChange == None:
+            return
+        self.__onSurfaceChange()
+
+    def setHeadline(self, headline:str):
+        self.__headline = headline
+        self.makeSurface()
+
+    def getValue(self)->str:
+        return self.__eingabeWert
+
+    def clearValue(self):
+        self.__eingabeWert = ""
+        self.makeSurface()
+
+    def showSurface(self):
+        self.__isShown = True
+        self.makeSurface()
+
+    def hideSurface(self):
+        self.__isShown = False
+        self.image.fill("white")
+        if not(self.__initPhase):
+            self.__CallOnSurfaceChange()
+
+    def getIfShown(self):
+        return self.__isShown
+
+    def makeSurface(self):
+        self.image:pygame.surface.Surface = pygame.surface.Surface((self.__width, self.__height))
+        self.image.fill("white")
+        self.rect:pygame.rect.Rect = self.image.get_rect(center = self.__centerPosition)
+        pygame.draw.rect(self.image, "Red", self.image.get_rect(), 4)
+
+        titelFont = pygame.font.Font(None, self.__headlineSize)
+        titelSurface = titelFont.render(self.__headline, False, "black").convert()
+        self.image.blit(titelSurface, titelSurface.get_rect(centerx = self.__width//2, top = self.__height*0.08))
+
+        eingabeRect = pygame.Rect(self.__width*0.1, self.__height*0.35, self.__width*0.8, self.__height*0.22)
+        pygame.draw.rect(self.image, "black", eingabeRect, 2)
+
+        eingabeFont = pygame.font.Font(None, self.__inputSize)
+        textZumRendern = self.__eingabeWert
+        if self.__cursorSichtbar and self.__isShown:
+            textZumRendern += "|"
+        eingabeSurface = eingabeFont.render(textZumRendern, False, "black").convert()
+        self.image.blit(eingabeSurface, eingabeSurface.get_rect(midleft=(eingabeRect.left + 8, eingabeRect.centery)))
+
+        buttonFont = pygame.font.Font(None, self.__buttonSize)
+        self.__buttonSurface = buttonFont.render(self.__buttonText, False, "black").convert()
+        self.__buttonRect = self.__buttonSurface.get_rect(center=(self.__width//2, int(self.__height*0.78)))
+        self.image.blit(self.__buttonSurface, self.__buttonRect)
+
+        if not(self.__initPhase):
+            self.__CallOnSurfaceChange()
+
+    def update(self):
+        if not(self.__isShown):
+            return
+        jetzt = pygame.time.get_ticks()
+        if jetzt - self.__letzterCursorBlink >= 450:
+            self.__cursorSichtbar = not(self.__cursorSichtbar)
+            self.__letzterCursorBlink = jetzt
+            self.makeSurface()
+
+    def handleLeftClick(self, pos:tuple[int, int]):
+        if not(self.__isShown):
+            return
+        localPos = (pos[0] - self.rect.x - self.__posOffset[0], pos[1] - self.rect.y - self.__posOffset[1])
+        didNoAction = True
+        if self.__buttonRect.collidepoint(localPos):
+            if self.__onSubmit != None:
+                self.__onSubmit(self.__eingabeWert)
+            didNoAction = False
+        if didNoAction:
+            if self.__onVoidClick != None:
+                self.__onVoidClick()
+            if self.__closeable:
+                self.hideSurface()
+
+    def handleKeyDown(self, event:pygame.event.Event):
+        if not(self.__isShown):
+            return
+        if event.key == pygame.K_RETURN:
+            if self.__onSubmit != None:
+                self.__onSubmit(self.__eingabeWert)
+            return
+        if event.key == pygame.K_BACKSPACE:
+            if len(self.__eingabeWert) != 0:
+                self.__eingabeWert = self.__eingabeWert[:-1]
+                self.makeSurface()
+            return
+        if len(self.__eingabeWert) >= self.__maxInputLength:
+            return
+        text = event.unicode
+        if len(text) != 1:
+            return
+        if not(text.isprintable()):
+            return
+        if text in ["\t", "\n", "\r"]:
+            return
+        self.__eingabeWert += text
+        self.makeSurface()
 
 def click():
     #TestDialog.hideSurface()
