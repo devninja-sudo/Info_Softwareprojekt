@@ -161,6 +161,8 @@ class Brett(pygame.sprite.Sprite):
         Erg.: -
         '''
         self.__netzAktiv = False
+        if self.__modusDialog != None:
+            self.__modusDialog.hideSurface()
         self.__startDialogGruppe.empty()
         self.__ready = True
         self.start()
@@ -291,6 +293,12 @@ class Brett(pygame.sprite.Sprite):
         self.__netzSock = sock
         self.__meinTeam = localTeam
         self.__netzVerbundenEvent.set()
+        if self.__modusDialog != None:
+            self.__modusDialog.hideSurface()
+        if self.__nameDialog != None:
+            self.__nameDialog.hideSurface()
+        if self.__netzStatusDialog != None:
+            self.__netzStatusDialog.hideSurface()
         self.__startDialogGruppe.empty()
         self.__ready = True
         self.start()
@@ -693,13 +701,13 @@ class Brett(pygame.sprite.Sprite):
         Eff.: Verarbeitet Linksklicks fuer Dialoge und Figuren je nach Modus.
         Erg.: -
         '''
-        if self.__modusDialog != None and self.__modusDialog.getIfShown():
+        if self.__modusDialog != None and self.__modusDialog.getIfShown() and self.__modusDialog in self.__startDialogGruppe:
             self.__modusDialog.handleLeftClick(pos)
             return
-        if self.__nameDialog != None and self.__nameDialog.getIfShown():
+        if self.__nameDialog != None and self.__nameDialog.getIfShown() and self.__nameDialog in self.__startDialogGruppe:
             self.__nameDialog.handleLeftClick(pos)
             return
-        if self.__netzStatusDialog != None and self.__netzStatusDialog.getIfShown() and not(self.__netzVerbundenEvent.is_set()):
+        if self.__netzStatusDialog != None and self.__netzStatusDialog.getIfShown() and self.__netzStatusDialog in self.__startDialogGruppe and not(self.__netzVerbundenEvent.is_set()):
             self.__netzStatusDialog.handleLeftClick(pos)
             return
 
