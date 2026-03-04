@@ -198,6 +198,7 @@ class Brett(pygame.sprite.Sprite):
         Erg.: -
         '''
         self.__netzAktiv = True
+        print("Netzwerkstart auf Host:", socket.gethostname(), "IP:", self.__holeLokaleIp())
         self.__zeigeNetzStatusDialog("Suche im  Netzwerk nach Spiel")
         if self.__netzListenerThread == None or not(self.__netzListenerThread.is_alive()):
             self.__netzListenerThread = threading.Thread(target=self.__listenerWorker, daemon=True)
@@ -212,8 +213,7 @@ class Brett(pygame.sprite.Sprite):
         '''
         if self.__netzVerbundenEvent.is_set():
             return
-        if self.__netzSucheThread != None and self.__netzSucheThread.is_alive():
-            return
+        self.__zeigeNetzStatusDialog("Suche im  Netzwerk nach Spiel")
         self.__netzSucheThread = threading.Thread(target=self.__discoveryWorker, daemon=True)
         self.__netzSucheThread.start()
 
@@ -223,7 +223,13 @@ class Brett(pygame.sprite.Sprite):
         Eff.: -
         Erg.: Die lokale IP ist als String geliefert.
         '''
-        return socket.gethostbyname(socket.gethostname())
+        allIps = socket.gethostbyname_ex(socket.gethostname())[2]
+        for ip in allIps:
+            if not(ip.startswith("127.")):
+                return ip
+        if len(allIps) != 0:
+            return allIps[0]
+        return "127.0.0.1"
 
     def __listenerWorker(self):
         '''
