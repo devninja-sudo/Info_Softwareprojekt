@@ -1004,7 +1004,7 @@ class Brett(pygame.sprite.Sprite):
         '''
         Vor.: Ein Bauer steht zur Umwandlung bereit.
         Eff.: Der Bauer, welcher in der Liste der zu Umwandelbarenbauern hinten steht ist in einen Laeufer, des seines gleichen Teams, umgewandelt.
-                Und der andere Spieler ist an der Reihe.
+                Und der andere Spieler ist an der Reihe. Das -image- ist aktualiesiert.
         Erg.: -
         '''
         self.__doPromote(self.__whiteBishop, self.__blackBishop, "LAEUFER")
@@ -1013,7 +1013,7 @@ class Brett(pygame.sprite.Sprite):
         '''
         Vor.: Ein Bauer steht zur Umwandlung bereit.
         Eff.: Der Bauer, welcher in der Liste der zu Umwandelbarenbauern hinten steht ist in einen Springer, des seines gleichen Teams, umgewandelt.
-                Und der andere Spieler ist an der Reihe.
+                Und der andere Spieler ist an der Reihe. Das -image- ist aktualiesiert.
         Erg.: -
         '''
         self.__doPromote(self.__whiteKnight, self.__blackKnight, "SPRINGER")
@@ -1022,17 +1022,19 @@ class Brett(pygame.sprite.Sprite):
         '''
         Vor.: Ein Bauer steht zur Umwandlung bereit.
         Eff.: Der Bauer, welcher in der Liste der zu Umwandelbarenbauern hinten steht ist in einen Dame, des seines gleichen Teams, umgewandelt.
-                Und der andere Spieler ist an der Reihe.
+                Und der andere Spieler ist an der Reihe. Das -image- ist aktualiesiert.
         Erg.: -
         '''
         self.__doPromote(self.__whiteQueen, self.__blackQueen, "DAME")
 
     def __doPromote(self, Team0Figure, Team1Figure, promotionName:str):
         '''
-        HIER MIT SPEZIFIZIERUNG UEBERARBEITEN WEITERMACHEN!!!!!
-        Vor.: Es existiert ein aktiver Promotion-Kontext in der Liste -__PawnPromotes-.
-        Eff.: Der Bauer, welcher in der Liste der zu Umwandelbarenbauern hinten steht ist in eine , des seines gleichen Teams, umgewandelt.
-                Und der andere Spieler ist an der Reihe.
+            Vor.: Es existiert ein aktiver Promotion-Kontext in der Liste -__PawnPromotes-. 
+            Team0Figure ist eine Figur instanz, welche beschreibt zu welche Figure auf dem Feld des Bauern für Team 0 auf dem Feld des Bauern zu setzten ist. 
+            Team1Figure ist eine Figur instanz, welche beschreibt zu welche Figure auf dem Feld des Bauern für Team 1 auf dem Feld des Bauern zu setzten ist. 
+            promotionName ist eine gueltige Netzwerkbezeichnung des Schachprotokolls, welche die Promotion beschreibt.
+        Eff.: Der Bauer, welcher in der Liste der zu Umwandelbarenbauern hinten steht ist in eine, des seines gleichen Teams, umgewandelt.
+                Und der andere Spieler ist an der Reihe. Das -image- ist aktualiesiert. Wenn das Brett in Netzwerkmodus ist, ist die Promotion, dem anderen Schachbrett mitgeteilt.
         Erg.: -
         '''
         promoteData = self.__PawnPromotes[-1]
@@ -1051,7 +1053,13 @@ class Brett(pygame.sprite.Sprite):
     def __finishTurn(self):
         '''
         Vor.: Ein regelkonformer Zug wurde ausgefuehrt.
-        Eff.: Prueft Promotion/Matt/Remis, aktualisiert Spielzustand und wechselt Spieler.
+        Eff.: Promotion/Matt/Remis sind ueberprueft und erzeugen die jeweiligen grafischen Aenderungen.
+            Der self.__eventMode ist zu "chooseFigure" geändert und der andere Spieler ist an der Reihe, außer das Spiel ist durch den Zug beendent, weil ein Patt oder ein Matt ausgeloest wurde.
+            In diesem Fall ist die Situation in der Konsole beschrieben und beim Matt sind alle Felder einzeln umrandet und mit einem gruenen Punkt versehen.
+            Bei einer Pattsituation sind nur alle Felder, jeweils grün eingeramt.
+            Auch ist, dann das Brett.image aktualiesiert.
+            Wenn eine Bauerentwicklungsmoeglichkeit erkannt wurde ist ein neues Dialogfenster auf der -self.image- Surface gezeichnet mit der Interaktionsmoeglichkeit auszuwaehlen, zu was sich der Bauer entwickeln soll.
+            der aktualisiert Spielzustand ist aktualiesiert und der andere Spieler ist nun an der Reihe, wenn keine Eingaben mehr von dem Spieler zu den Zug benoetigt wurden.
         Erg.: -
         '''
         for row in [1, 8]:
@@ -1104,7 +1112,7 @@ class Brett(pygame.sprite.Sprite):
         '''
         Vor.: -team- ist eine gueltige Team-ID.
         Eff.: -
-        Erg.: -True-, wenn das Team mindestens einen legalen Zug hat, sonst -False-.
+        Erg.: -True- ist geliefert, wenn das Team mindestens einen legalen Zug hat, sonst ist -False- geliefert.
         '''
         for field in self.__fields.values():
             if type(field) != Feld:
@@ -1120,8 +1128,9 @@ class Brett(pygame.sprite.Sprite):
     def checkIfMate(self)->list[int]:
         '''
         Vor.: -
-        Eff.: Prueft Matt und beendet wenn gefunden das Spiel.
+        Eff.: -
         Erg.: Eine Liste mattgesetzter Teams oder [-1], falls kein Matt vorliegt.
+            Matt bedeutet, dass eine Figur mit Koenigsrolle bedroht wird und kein Zug durchgefuert werden kann, welche dafuer sorgt, dass dies nicht mehr der Fall ist.
         '''
         checkedTeams = self.__getCheckedTeams()
         if len(checkedTeams) == 0:
@@ -1138,9 +1147,9 @@ class Brett(pygame.sprite.Sprite):
     
     def __getKingFieldsInDanger(self)->list[Feld]:
         '''
-        Vor.: Koenigsfelder sind auf dem Brett vorhanden.
+        Vor.: -self.fields- ist eine Liste mit ausschließlichen Feldinstanzen des eigenen Brettes.
         Eff.: -
-        Erg.: Eine Liste aller Koenigsfelder, die bedroht sind, ist geliefert.
+        Erg.: Eine Liste aller Figuren mit Koenigsrolle, welche von anderen Figuren im naechsten gegnerischen Zug geschlagen werden koennten, ist geliefert.
         '''
         KingFields:list[Feld] = self.__getFieldsWithKings()
         checkedKings:list[int] = []
@@ -1153,7 +1162,7 @@ class Brett(pygame.sprite.Sprite):
         '''
         Vor.: -
         Eff.: -
-        Erg.: Eine Liste aller Teams, deren Koenig aktuell im Schach steht, ist geliefert.
+        Erg.: Eine Liste aller Teams, deren Figur mit Koenigsrolle aktuell im Schach steht, ist geliefert.
         '''
         KingFieldsInDanger:list[Feld] = self.__getKingFieldsInDanger()
         checkedTeams:list[int] = []
@@ -1168,14 +1177,14 @@ class Brett(pygame.sprite.Sprite):
     
     def __getDangerFieldsWhenMove(self, targetField:Feld, OriginField:Feld)->list[Feld]:
         '''
-        Vor.: -OriginField- enthaelt eine Figur und beide Felder sind gueltig.
-        Eff.: Simuliert den Zug temporaer und ermittelt Bedrohungen auf dem Zielfeld.
+        Vor.: -OriginField- enthaelt eine Figur und beide Felder sind Feldinstanzen aus -self.fields-.
+        Eff.: -
         Erg.: Eine Liste bedrohender Felder nach dem simulierten Zug ist geliefert.
         '''
         resultingDangerFields:list[Feld] = [] 
         MovingFigure = OriginField.getFigure()
         if MovingFigure == None:
-            raise Exception("TEs muss schon ne Figur auf dem Ursprungsfeld stehen")
+            raise Exception("ERROR: Es muss schon ne Figur auf dem Ursprungsfeld stehen (__getDangerFieldsWhenMove)")
         
         targetFieldFigur = targetField.getFigure()
 
@@ -1231,7 +1240,7 @@ class Brett(pygame.sprite.Sprite):
         '''
         Vor.: -
         Eff.: -
-        Erg.: Eine Liste aller Felder mit König ist geliefert.
+        Erg.: Eine Liste aller Felder auf dem eine Figur mit Koenigsrolle steht ist geliefert.
         '''
         fieldsWithKings:list[Feld] = []
         for field in self.__fields.values():
@@ -1247,7 +1256,7 @@ class Brett(pygame.sprite.Sprite):
     def __switchToOtherPlayer(self)->None:
         '''
         Vor.: -
-        Eff.: Wechselt das aktive Team.
+        Eff.: Das aktive Team ist gewechselt.
         Erg.: -
         '''
         self.__onTurnTeam = (self.__onTurnTeam+1)%2
@@ -1255,8 +1264,8 @@ class Brett(pygame.sprite.Sprite):
     def __chooseFigureEvent(self, clickedField:Feld)->bool:
         '''
         Vor.: -clickedField- ist ein gueltiges Feld.
-        Eff.: Prueft Figurwahl, markiert moegliche Ziele und setzt Eventmodus.
-        Erg.: -True-, wenn eine waehlbare Figur aktiviert wurde, sonst -False-.
+        Eff.: Wenn auf -clickedField- eine Figur steht, welche der aktuelle Spieler bewegen darf sind moegliche Ziele von der Figur -clickedField- markiert und der Eventmodus ist auf setFigure angepasst.
+        Erg.: -True- ist geliefert, wenn eine waehlbare Figur aktiviert wurde, sonst ist -False- geliefert.
         '''
         clickedFigure:None|Springer|Turm|Bauer|Laeufer|Dame|Koenig = clickedField.getFigure()
         clickedFieldLabel:str = clickedField.getLabel()
@@ -1264,7 +1273,6 @@ class Brett(pygame.sprite.Sprite):
             self.__clearAllFieldHighlights() 
             self.__eventMode = "chooseFigure"
             return False
-        # clickedFigure ist ab jetzt Aufjedenfall eine Figur
 
         if clickedFigure.getTeam() != self.__onTurnTeam:
             self.__eventMode = "chooseFigure"
@@ -1279,7 +1287,7 @@ class Brett(pygame.sprite.Sprite):
     def __clearAllFieldHighlights(self)->None:
         '''
         Vor.: -
-        Eff.: Entfernt alle Hervorhebungen von Feldern.
+        Eff.: Alle Hervorhebungen von Feldern aus -self.fields- sind entfernt.
         Erg.: -
         '''
         for key in self.__fields.keys():
@@ -1290,6 +1298,7 @@ class Brett(pygame.sprite.Sprite):
 
     def getPossibleTurnFields(self, Field:Feld, ignoreChecksOrAnxiety:bool=False, ignoreBuildingChecks:bool=False, ignoreCastling:bool=False)->list[Feld]:        # Geht sicher, dass nicht doch irgendwie Ein Feld außerhalb des Brettes ist arbeitet noch Relative
         '''
+        #HIER WEITERMACHEN MIT SPEZIFIZIEREN
         Vor.: -Field- ist ein gueltiges Feld; die bool Flags steuern Filterregeln.
         Eff.: -
         Erg.: Eine Liste aller moeglichen Zielfelder fuer den Zug ist geliefert.
