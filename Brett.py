@@ -1685,9 +1685,11 @@ class Brett(pygame.sprite.Sprite):
 
     def getRelativeField(self, fieldLabel:str, relativeField:tuple[int, int])->Feld|None:
         '''
-        Vor.: -fieldLabel- ist ein Startlabel, -relativeField- ein relativer Versatz.
+        Vor.: -fieldLabel- ist ein Startlabel, -relativeField- ist eine gueltige Feldbezeichnung, die relativ zu dem mit dem -fieldLabel- als Schlüssel von -self.fields- gemeinten Feld die Anzahl der Felder angibt, 
+            die fuer einen Zug in Buchstaben und Zahlen Richtung noetig sind. Der iste Integer von dem Tuple ist die X Felderanzahl, 
+            wenn die Rotation 0 entspricht und der zweite Integer von dem Tuplde sind dann die Felder Anzahl in Y-richtung.
         Eff.: - HIER WEITER
-        Erg.: Das relative Zielfeld oder -None- bei Ungueltigkeit ist geliefert.
+        Erg.: Das relative Zielfeld oder -None-, wenn -relativeField- ein Feld außerhalb des Brettes beschreibt, ist geliefert.
         '''
         startFieldX:int = ord(fieldLabel[0])
         startFieldY:int = int(fieldLabel[1])
@@ -1702,9 +1704,9 @@ class Brett(pygame.sprite.Sprite):
 
     def getFieldByCords(self, pos:tuple[int, int])->Feld|None:
         '''
-        Vor.: -pos- ist eine Pixelkoordinate.
-        Eff.: Ermittelt anhand der Koordinate das zugehoerige Feld.
-        Erg.: Das gefundene Feld oder -None- ist geliefert.
+        Vor.: -pos- ist eine Pixelkoordinate. Das Brett wurde nicht durch spaetere Einfluesse auf die Sprite zusetzlich zu bei der inizierung angegebenden -topLeftCorner- verschoben.
+        Eff.: -
+        Erg.: Das Feld, in dem die Pixelkordinate -pos- liegt ist geliefert, wenn keines an der Position ist, dann ist None geliefert.
         '''
         x:int = pos[0]-self.rect.topleft[0]
         y:int = pos[1]-self.rect.topleft[1]
