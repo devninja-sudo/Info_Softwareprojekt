@@ -3,7 +3,22 @@ from typing import Callable
 
 
 class Dialog(pygame.sprite.Sprite):
-    def __init__(self, DialogWidth:int, DialogHeight:int, centerPosition:tuple[int], headline:str, headlineSize:int, answers:list[list[str, Callable]], answerSize:int, answerDistanceSize:float, closeable:bool, onVoidClick:Callable|None=None, posOffset:tuple[int, int]=(0,0), onSurfaceChange:Callable=None):
+    '''
+    Vor.: -DialogWidth- beschreibt eine Breite und ist nicht Negativ.
+        -DialogHeight- beschreibt eine Hoehe und ist nicht Negativ.
+        -centerPosition- ist vom Typ Tuple und besitzt 2 Integer die den Mittelpunkt des Dialogfensters Beschreiben, wobei der erste für die X-Position steht und der zweite Integer die Y-Achsen Position beschreibt.
+        -headline- ist vom Typ String und beschreibt die Überschrift des Dialogfensters.
+        -headlineSize- ist ein nicht negativer Integer und beschreibt die Schriftgroesse der Ueberschrift.
+        -answers- ist eine Liste, welche weitere Listen als Elemente hat, welche aus einem String bestehen, welcher den Text fuer die Antwortmoeglichkeit beschreibt, und desweiterin eine Funktion oder Methode enthält, welche aufgerufen wird beim klicken auf die Antwortmoeglichkeit, die Methode/Funktion benötigt kein Argument/Parameter.
+        -answerSize- ist ein positiver Integer, welcher die Schriftgroesse der Antwortmoeglichkeiten beschreibt.
+        -answerDistanceSize- ist ein positiver Integer, welchen zusaetzlichen Y-Achsen Abstand die Antwortmoeglichkeiten von einander haben.
+        -closeable- ist bei angabe True oder False und beschreibt, ob beim verarbeiten eines Klickes außerhalb des Feldes das Dialogfenster unsichtbar werden soll, dabei wird das Dialogfenster im geschlossenden Zustand Weiß.
+        -onVoidClick- ist bei Angabe eine Methode/Funktion die kein Argument/Parameter benoetigt, diese wird Aufgerufen, wenn ein linker Mausklick verarbeitet wird, jedoch dieser nicht auf einer Antwortmoeglichkeit ausgefuert wurde.
+        -posOffset- ist eine Punktangabe als Tuple durch zwei Integer und beschreibt eine zusetzliche Verschiebung des Mittelpunktes.
+        -onSurfaceChange- ist bei Angabe eine Methode/Funktion die kein Argument/Parameter benoetigt, diese wird Aufgerufen, wenn die Flaeche von dem Dialogfenster aktualliesiert wurde.
+    Eff.: HIER WEITER MACHEN
+    '''
+    def __init__(self, DialogWidth:int, DialogHeight:int, centerPosition:tuple[int, int], headline:str, headlineSize:int, answers:list[list[str, Callable]], answerSize:int, answerDistanceSize:int, closeable:bool, onVoidClick:Callable|None=None, posOffset:tuple[int, int]=(0,0), onSurfaceChange:Callable=None):
         super().__init__()
         self.__initPhase = True
         self.__width:int = DialogWidth
