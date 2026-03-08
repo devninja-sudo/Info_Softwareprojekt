@@ -1731,12 +1731,12 @@ if __name__ == "__main__":
 
 
     TestBrettGroup = pygame.sprite.GroupSingle()
-    Spielbrett = Brett(800, (1920/2-400, 1080/2-400), "white", "black")
+    Spielbrett = Brett(800, (1920/2-400, 1080/2-400), "#eeeed1", "#739754")
     TestBrettGroup.add(Spielbrett)
 
     
     while True:
-        screen.fill("grey")
+        screen.fill((30,30,30))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
