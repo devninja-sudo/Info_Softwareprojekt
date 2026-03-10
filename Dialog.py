@@ -11,12 +11,15 @@ class Dialog(pygame.sprite.Sprite):
         -headlineSize- ist ein nicht negativer Integer und beschreibt die Schriftgroesse der Ueberschrift.
         -answers- ist eine Liste, welche weitere Listen als Elemente hat, welche aus einem String bestehen, welcher den Text fuer die Antwortmoeglichkeit beschreibt, und desweiterin eine Funktion oder Methode enthält, welche aufgerufen wird beim klicken auf die Antwortmoeglichkeit, die Methode/Funktion benötigt kein Argument/Parameter.
         -answerSize- ist ein positiver Integer, welcher die Schriftgroesse der Antwortmoeglichkeiten beschreibt.
-        -answerDistanceSize- ist ein positiver Integer, welchen zusaetzlichen Y-Achsen Abstand die Antwortmoeglichkeiten von einander haben.
+        -answerDistanceSize- ist ein positiver Integer, welcher den zusaetzlichen Y-Achsen Abstand von den Antwortmoeglichkeiten zu einander beschreibt.
         -closeable- ist bei angabe True oder False und beschreibt, ob beim verarbeiten eines Klickes außerhalb des Feldes das Dialogfenster unsichtbar werden soll, dabei wird das Dialogfenster im geschlossenden Zustand Weiß.
         -onVoidClick- ist bei Angabe eine Methode/Funktion die kein Argument/Parameter benoetigt, diese wird Aufgerufen, wenn ein linker Mausklick verarbeitet wird, jedoch dieser nicht auf einer Antwortmoeglichkeit ausgefuert wurde.
         -posOffset- ist eine Punktangabe als Tuple durch zwei Integer und beschreibt eine zusetzliche Verschiebung des Mittelpunktes.
         -onSurfaceChange- ist bei Angabe eine Methode/Funktion die kein Argument/Parameter benoetigt, diese wird Aufgerufen, wenn die Flaeche von dem Dialogfenster aktualliesiert wurde.
-    Eff.: HIER WEITER MACHEN
+    Eff.: self.image ist eine Surface von einer weißen Box, mit der Breite von -DialogWidth-  und der Hoehe von -DialogHeight- und die Ueberschrift -headline- oben mit der -headlineSize- beschriebenden Groesse mittig traegt.
+            Mit Text des ersten Elements aus den Listen, welche in der Liste -answers- stehnen ist die self.image ebenfalls versehen und der Abstand der Antwort moeglichkeiten von den Textelementkanten Unten zu Oben ist durch -answerDistanceSize- beschreibbar.
+        self.rect ist ein Rect, welches die gleiche Groesse wie self.image besitzt und die Position der Mitte mit -centerPosition- und bedenken von -posOffset- festgelegt ist.
+    Erg.: Eine Dialoginstanz ist geliefert.
     '''
     def __init__(self, DialogWidth:int, DialogHeight:int, centerPosition:tuple[int, int], headline:str, headlineSize:int, answers:list[list[str, Callable]], answerSize:int, answerDistanceSize:int, closeable:bool, onVoidClick:Callable|None=None, posOffset:tuple[int, int]=(0,0), onSurfaceChange:Callable=None):
         super().__init__()
@@ -41,6 +44,11 @@ class Dialog(pygame.sprite.Sprite):
         pass
 
     def __CallOnSurfaceChange(self):
+        '''
+        Vor.: - 
+        Eff.: Wenn -onSurfaceChange- bei der Initiierung festgelegt wurde und dies Korrekt ausgefuert wurde ist die angegebene Funktion aufgerufen.
+        Erg.: -
+        '''
         if self.__onSurfaceChange == None:
             return
         self.__onSurfaceChange()
