@@ -107,7 +107,7 @@ class Brett(pygame.sprite.Sprite):
                 ["Spiel an einem Rechner", self.__waehleSingleplayer],
                 ["Spiel über Netzwerk", self.__zeigeNameDialog]
             ],
-            self.rect.height//8, 0.42, False,
+            self.rect.height//9, 0.42, False,
             onVoidClick=self.__generateImage,
             posOffset=self.rect.topleft,
             onSurfaceChange=self.__generateImage
@@ -1761,4 +1761,5 @@ if __name__ == "__main__":
         pygame.display.update()
         clock.tick(60)
         #Spielbrett.setRotation(int(input()))
+
 
