@@ -19,6 +19,15 @@ class Dialog(pygame.sprite.Sprite):
     Eff.: self.image ist eine Surface von einer weißen Box, mit der Breite von -DialogWidth-  und der Hoehe von -DialogHeight- und die Ueberschrift -headline- oben mit der -headlineSize- beschriebenden Groesse mittig traegt.
             Mit Text des ersten Elements aus den Listen, welche in der Liste -answers- stehnen ist die self.image ebenfalls versehen und der Abstand der Antwort moeglichkeiten von den Textelementkanten Unten zu Oben ist durch -answerDistanceSize- beschreibbar.
         self.rect ist ein Rect, welches die gleiche Groesse wie self.image besitzt und die Position der Mitte mit -centerPosition- und bedenken von -posOffset- festgelegt ist.
+
+
+        Die private Variable:
+        -self.__answersDataWithSurface- ist nun zu einer Liste gesetzt,
+            welche Tabellen enthaelt mit den Schluesseln "text", welchen den Text von einer angegebenden Antwortmoeglichkeit enthaelt,
+            "callable" der angegebenden Funktion/Methode entspricht oder bei keiner Angabe None,
+            "surface" einer pygame.Surface, wie die Flaeche fuer die Antwortmoeglichkeiten auszusehen hat beschreibt und
+            dem Schluessel "rect", welcher zu der Flaeche gehoert und beschreibt an welcher Stelle sie abgebildet werden soll.
+            
     Erg.: Eine Dialoginstanz ist geliefert.
     '''
     def __init__(self, DialogWidth:int, DialogHeight:int, centerPosition:tuple[int, int], headline:str, headlineSize:int, answers:list[list[str, Callable]], answerSize:int, answerDistanceSize:int, closeable:bool, onVoidClick:Callable|None=None, posOffset:tuple[int, int]=(0,0), onSurfaceChange:Callable=None):
@@ -54,6 +63,15 @@ class Dialog(pygame.sprite.Sprite):
         self.__onSurfaceChange()
 
     def createSelfAnswersSurfaceData(self):
+        '''
+        Vor.: -
+        Eff:. -self.__answersDataWithSurface- ist nun zu einer Liste gesetzt,
+            welche Tabellen enthaelt mit den Schluesseln "text", welchen den Text von einer angegebenden Antwortmoeglichkeit enthaelt,
+            "callable" der angegebenden Funktion/Methode entspricht oder bei keiner Angabe None,
+            "surface" einer pygame.Surface, wie die Flaeche fuer die Antwortmoeglichkeiten auszusehen hat beschreibt und
+            dem Schluessel "rect", welcher zu der Flaeche gehoert und beschreibt an welcher Stelle sie abgebildet werden soll.
+        Erg.: -         
+        '''
         dialogAnswerFont = pygame.font.Font(None, self.__answerSize)
         self.__answersDataWithSurface:list[dict] = []
         for answer in self.__answers:
@@ -71,6 +89,13 @@ class Dialog(pygame.sprite.Sprite):
             self.__answersDataWithSurface.append(answerData)
 
     def makeSurface(self):
+        '''
+        Vor.: - 
+        Eff.: self.image ist eine Surface von einer weißen Box, mit der Breite von -DialogWidth-  und der Hoehe von -DialogHeight- und die Ueberschrift -headline- oben mit der -headlineSize- beschriebenden Groesse mittig traegt.
+            Mit Text des ersten Elements aus den Listen, welche in der Liste -answers- stehnen ist die self.image ebenfalls versehen und der Abstand der Antwort moeglichkeiten von den Textelementkanten Unten zu Oben ist durch -answerDistanceSize- beschreibbar.
+            self.rect ist ein Rect, welches die gleiche Groesse wie self.image besitzt und die Position der Mitte mit -centerPosition- und bedenken von -posOffset- festgelegt ist.
+        Erg.: -
+        '''
         self.image:pygame.surface.Surface = pygame.surface.Surface((self.__width, self.__height))
         self.image.fill("white")
         self.rect:pygame.rect.Rect = self.image.get_rect(center = self.__centerPosition)
@@ -86,19 +111,43 @@ class Dialog(pygame.sprite.Sprite):
             self.__CallOnSurfaceChange()
 
     def hideSurface(self):
+        '''
+        Vor.: -
+        Eff.: -self.image- ist nun vollstaendig weiss eingefaerbt.
+        Erg.: - 
+        '''
         self.__isShown = False
         self.image.fill("white")
         if not(self.__initPhase):
             self.__CallOnSurfaceChange()
 
-    def getIfShown(self):
+    def getIfShown(self)->bool:
+        '''
+        Vor.: -
+        Eff.: -
+        Er.: Es ist geliefert, ob -self.image- weiss eingefaerbt ist, weil von den Methoden -hideSurface- und -showSurface- zuletzt -hideSurface- ausgefuert wurde.
+        '''
         return self.__isShown
 
     def showSurface(self):
+        '''
+        Vor.: -
+        Eff.: self.image ist eine Surface von einer weißen Box, mit der Breite von -DialogWidth-  und der Hoehe von -DialogHeight- und die Ueberschrift -headline- oben mit der -headlineSize- beschriebenden Groesse mittig traegt.
+            Mit Text des ersten Elements aus den Listen, welche in der Liste -answers- stehnen ist die self.image ebenfalls versehen und der Abstand der Antwort moeglichkeiten von den Textelementkanten Unten zu Oben ist durch -answerDistanceSize- beschreibbar.
+        self.rect ist ein Rect, welches die gleiche Groesse wie self.image besitzt und die Position der Mitte mit -centerPosition- und bedenken von -posOffset- festgelegt ist.
+        Erg.: - 
+        '''
         self.__isShown = True
         self.makeSurface()
 
     def handleLeftClick(self, pos:tuple[int, int]):
+        '''
+        Vor.: -pos- ist ein Tuple mit zwei Integern. Er beschreibt die Position der Maus bei einem Mausklick.
+        Eff.: Wenn -pos- in dem Berreich einer Antwortmoeglichkeit ist, dann ist sofern angegeben, die fuer die Antwort definierte Methode oder Funktion ausgefuert.
+            Wenn -pos- in keinem Berreich einer Antwortmoeglichkeit liegt, dann ist die Methode/Funktion ausgefuert, welche bei der Initiierung mit -onVoidClick- evtl. angegeben wurde ausgefuert und 
+            wenn das Dialogfenster schliessbar ist, dann ist es nun weiss eingefaerbt und -self.hideSurface- ist ausgefuert.
+        Erg.: - 
+        '''
         didNoAction = True
         if not(self.__isShown):
             return
@@ -114,6 +163,7 @@ class Dialog(pygame.sprite.Sprite):
                 self.__onVoidClick()
             if self.__closeable:
                 self.hideSurface()
+                
 class TextInputDialog(pygame.sprite.Sprite):
     def __init__(self, DialogWidth:int, DialogHeight:int, centerPosition:tuple[int], headline:str, headlineSize:int, inputSize:int, buttonText:str, buttonSize:int, closeable:bool, onSubmit:Callable|None=None, onVoidClick:Callable|None=None, posOffset:tuple[int, int]=(0,0), onSurfaceChange:Callable=None, maxInputLength:int=24):
         super().__init__()
