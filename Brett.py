@@ -1725,16 +1725,21 @@ class Brett(pygame.sprite.Sprite):
 
 if __name__ == "__main__":
     pygame.init()
-    screen = pygame.display.set_mode((1920, 1080))
-    pygame.display.set_caption('Brett Test')
+    icon = pygame.image.load("assets/graphics/icon.png")
+    width = 800
+    height = width
+    screen = pygame.display.set_mode((width, height))
+    
+    pygame.display.set_caption('Schach')
+    pygame.display.set_icon(icon)
     clock = pygame.time.Clock()
 
 
     TestBrettGroup = pygame.sprite.GroupSingle()
-    Spielbrett = Brett(800, (1920/2-400, 1080/2-400), "#eeeed1", "#739754")
+    Spielbrett = Brett(800, (0, 0), "#eeeed1", "#739754")
     TestBrettGroup.add(Spielbrett)
 
-    
+    # Theoretisch in die Klasse einbaubar, jedoch dagegen entschieden.
     while True:
         screen.fill((30,30,30))
         for event in pygame.event.get():
@@ -1760,6 +1765,3 @@ if __name__ == "__main__":
         TestBrettGroup.update()
         pygame.display.update()
         clock.tick(60)
-        #Spielbrett.setRotation(int(input()))
-
-
