@@ -11,6 +11,7 @@ from Bauer import Bauer
 from Koenig import Koenig
 from Dialog import Dialog, TextInputDialog
 from time import time
+from resource_path import resource_path
 
 class Brett(pygame.sprite.Sprite):
     '''
@@ -80,7 +81,6 @@ class Brett(pygame.sprite.Sprite):
         self.__netzVerbundenEvent = threading.Event()
         self.__netzEmpfangThread:threading.Thread|None = None
         self.__netzListenerThread:threading.Thread|None = None
-        self.__netzSucheThread:threading.Thread|None = None
         self.__spielerName:str = ""
         self.__meinTeam:int = 0
         self.__wendeRemoteZugAn:bool = False
@@ -120,7 +120,7 @@ class Brett(pygame.sprite.Sprite):
         Vor.: Die Startdialoggruppe ist initialisiert.
         Eff.: Der Dialog zur Namenseingabe ist erstellt und aktiv gesetzt.
             Inform einer weißen Box, welche sich ueber das Schachbrett streckt und die Ueberschrift "Name eingeben" traegt.
-            Mit den Unterueberschriften "Weiter", welche Interaktionsmoeglichkeiten darstellen im Bezug zur Ueberschrift.
+            Mit den Unterueberschriften "Zurück" und "Weiter", welche Interaktionsmoeglichkeiten darstellen im Bezug zur Ueberschrift.
             Texteingaben sind in einem Eingabeberreich dargestellt.
         Erg.: -
         '''
@@ -135,7 +135,9 @@ class Brett(pygame.sprite.Sprite):
             onVoidClick=self.__generateImage,
             posOffset=self.rect.topleft,
             onSurfaceChange=self.__generateImage,
-            maxInputLength=24
+            maxInputLength=24,
+            zweiterKnopfText="Zurück",
+            wennZweiterButton=self.__setupStartDialogs
         )
         self.__startDialogGruppe.empty()
         self.__startDialogGruppe.add(self.__nameDialog)
@@ -144,16 +146,17 @@ class Brett(pygame.sprite.Sprite):
     def __zeigeNetzStatusDialog(self, headline:str):
         '''
         Vor.: -headline- ist ein String und beschreibt die anzuzeigende Ueberschrift.
-        Eff.: Der Dialog zur Netzwerkinit und Suche ist erstellt und angezeigt.
+        Eff.: Der Dialog zur Netzwerkinit ist erstellt und angezeigt.
             Inform einer weißen Box, welche sich ueber das Schachbrett streckt und die Ueberschrift -headline- mittig traegt.
-            Mit den Unterueberschriften "Erneut suchen", welche eine Interaktionsmoeglichkeit darstellen im Bezug zur Ueberschrift.
+            Mit den Unterueberschriften zur Anzeige der eigenen IP und zum manuellen Verbinden per IP.
         Erg.: -
         '''
+        lokaleIp = self.__holeLokaleIp()
         self.__netzStatusDialog = Dialog(
             self.rect.width, self.rect.height,
             (self.rect.width//2, self.rect.height//2),
             headline, self.rect.height//14,
-            [["Erneut suchen", self.__starteNetzSuche], ["IP eingeben", self.__zeigeIpDialog]],
+            [["Eigene IP: " + lokaleIp, None], ["IP eingeben", self.__zeigeIpDialog], ["Zurück", self.__zeigeNameDialog]],
             self.rect.height//10, 0.7, False,
             onVoidClick=self.__generateImage,
             posOffset=self.rect.topleft,
@@ -175,7 +178,9 @@ class Brett(pygame.sprite.Sprite):
             onVoidClick=self.__generateImage,
             posOffset=self.rect.topleft,
             onSurfaceChange=self.__generateImage,
-            maxInputLength=15
+            maxInputLength=15,
+            zweiterKnopfText="Zurück",
+            wennZweiterButton=lambda: self.__zeigeNetzStatusDialog("Warte auf Verbindung")
         )
         self.__startDialogGruppe.empty()
         self.__startDialogGruppe.add(self.__ipDialog)
@@ -257,29 +262,16 @@ class Brett(pygame.sprite.Sprite):
     def __starteMultiplayer(self):
         '''
         Vor.: Ein gueltiger Spielername ist gesetzt.
-        Eff.: Multiplayer ist aktiviert, Listener gestartet und Suche wird gestartet.
-            Mittels einen bereits in der optik Beschriebenden Dialogfensters ist der Suchstatus mittels der Ueberschrift "Suche im  Netzwerk nach Spiel" abzulesen.
+        Eff.: Multiplayer ist aktiviert, Listener gestartet und die eigene IP wird zur manuellen Verbindungsaufnahme angezeigt.
+            Mittels einen bereits in der optik Beschriebenden Dialogfensters ist der Status mittels der Ueberschrift "Warte auf Verbindung" abzulesen.
         Erg.: -
         '''
         self.__netzAktiv = True
         print("Netzwerkstart auf Host:", socket.gethostname(), "IP:", self.__holeLokaleIp())
-        self.__zeigeNetzStatusDialog("Suche im  Netzwerk nach Spiel")
+        self.__zeigeNetzStatusDialog("Warte auf Verbindung")
         if self.__netzListenerThread == None or not(self.__netzListenerThread.is_alive()):
             self.__netzListenerThread = threading.Thread(target=self.__listenerWorker, daemon=True)
             self.__netzListenerThread.start()
-        self.__starteNetzSuche()
-
-    def __starteNetzSuche(self):
-        '''
-        Vor.: -
-        Eff.: Ein Suchthread ist gestartet, falls dieser nicht bereits läuft.
-        Erg.: -
-        '''
-        if self.__netzVerbundenEvent.is_set():
-            return
-        self.__zeigeNetzStatusDialog("Suche im  Netzwerk nach Spiel")
-        self.__netzSucheThread = threading.Thread(target=self.__discoveryWorker, daemon=True)
-        self.__netzSucheThread.start()
 
     def __holeLokaleIp(self)->str:
         '''
@@ -327,47 +319,6 @@ class Brett(pygame.sprite.Sprite):
             print("Antwort gesendet: OK;" + self.__spielerName)
             self.__setzeNetzSocket(conn, 1)
             return
-
-    def __discoveryWorker(self):
-        '''
-        Vor.: Netzwerkmodus ist aktiv.
-        Eff.: Sucht im lokalen Netz nach Gegenstellen und fuehrt ggf. Handshake aus. Bei Fehlern ist der Fehler im Dialogfenster "LAN-Suche fehlgeschlagen" oder "Kein Spiel gefunden, warte auf Anfrage" ablesbar.
-        Erg.: -
-        '''
-        localIp = self.__holeLokaleIp()
-        chunks = localIp.split(".")
-        if len(chunks) != 4:
-            self.__zeigeNetzStatusDialog("LAN-Suche fehlgeschlagen")
-            return
-        prefix = f"{chunks[0]}.{chunks[1]}.{chunks[2]}"
-        own = int(chunks[3])
-        print("Starte Suche in", prefix + ".1-254", "eigene IP-Endung:", own)
-        for host in range(1, 255):
-            if not(self.__netzAktiv) or self.__netzVerbundenEvent.is_set():
-                return
-            if host == own:
-                continue
-            target = f"{prefix}.{host}"
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            if sock.connect_ex((target, self.__netzPort)) != 0:
-                sock.close()
-                continue
-            print("Port offen auf", target)
-            sock.sendall(("ASK;" + self.__spielerName + "\n").encode("utf-8"))
-            print("Gesendet an", target, ": ASK;" + self.__spielerName)
-            raw = sock.recv(2048)
-            if len(raw) == 0:
-                sock.close()
-                continue
-            responseText = raw.decode("utf-8").strip()
-            print("Antwort von", target, ":", responseText)
-            if responseText.startswith("OK;"):
-                self.__setzeNetzSocket(sock, 0)
-                return
-            sock.close()
-        if not(self.__netzVerbundenEvent.is_set()):
-            print("Suche fertig, kein Spiel gefunden")
-            self.__zeigeNetzStatusDialog("Kein Spiel gefunden, warte auf Anfrage")
 
     def __setzeNetzSocket(self, sock:socket.socket, localTeam:int):
         '''
@@ -548,13 +499,22 @@ class Brett(pygame.sprite.Sprite):
             self.rect.width, self.rect.height, 
             (self.rect.width//2, self.rect.height//2), 
             "Was möchtest du tun?", self.rect.height//8, 
-            [["Neues Spiel!", self.restartGame]], 
+            [["Neues Spiel!", self.restartGame], ["Zurück", self.__resignDialogAusblenden]], 
             self.rect.height//5, 0.4, True, 
             onVoidClick=self.__generateImage, 
             posOffset=self.rect.topleft, 
             onSurfaceChange=self.__generateImage
         )
         self.__DialogGroup.add(self.__resignDialog)
+
+    def __resignDialogAusblenden(self):
+        '''
+        Vor.: Der Aufgabedialog ist initialisiert.
+        Eff.: Der Aufgabedialog ist ausgeblendet und das Brettbild aktualisiert.
+        Erg.: -
+        '''
+        self.__resignDialog.hideSurface()
+        self.__generateImage()
 
     def __reset_game_state(self):
         '''
@@ -1725,7 +1685,7 @@ class Brett(pygame.sprite.Sprite):
 
 if __name__ == "__main__":
     pygame.init()
-    icon = pygame.image.load("assets/graphics/icon.png")
+    icon = pygame.image.load(resource_path("assets/graphics/icon.png"))
     width = 800
     height = width
     screen = pygame.display.set_mode((width, height))

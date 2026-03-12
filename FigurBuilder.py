@@ -1,6 +1,7 @@
 import pygame
 from sys import exit
 from typing import Callable
+from resource_path import resource_path
 
 class FigurBuilder(pygame.sprite.Sprite):
     '''
@@ -28,7 +29,7 @@ class FigurBuilder(pygame.sprite.Sprite):
         self.__field_count:int = field_count
         self.__fieldLabelStartLetter:str = fieldLabelStartLetter
 
-        self.image:pygame.surface.Surface = pygame.image.load(self.__imagePath).convert_alpha()
+        self.image:pygame.surface.Surface = pygame.image.load(resource_path(self.__imagePath)).convert_alpha()
         self.image:pygame.surface.Surface = pygame.transform.scale(self.image, (size, size))
 
         self.rect:pygame.rect.Rect = self.image.get_rect(center = self.__centerPos)
