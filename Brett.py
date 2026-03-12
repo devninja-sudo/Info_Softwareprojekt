@@ -11,6 +11,7 @@ from Bauer import Bauer
 from Koenig import Koenig
 from Dialog import Dialog, TextInputDialog
 from time import time
+from resource_path import resource_path
 
 class Brett(pygame.sprite.Sprite):
     '''
@@ -1684,7 +1685,7 @@ class Brett(pygame.sprite.Sprite):
 
 if __name__ == "__main__":
     pygame.init()
-    icon = pygame.image.load("assets/graphics/icon.png")
+    icon = pygame.image.load(resource_path("assets/graphics/icon.png"))
     width = 800
     height = width
     screen = pygame.display.set_mode((width, height))

@@ -65,8 +65,10 @@ jobs:
     # BUILD
     # -------------------------
     - name: Build EXE
+      shell: bash
       run: |
-        python -m PyInstaller --onefile --windowed --name Schach Brett.py
+        EXE_NAME="Schach_v${{ steps.version.outputs.new_version }}"
+        python -m PyInstaller --onefile --windowed --add-data "assets;assets" --name "$EXE_NAME" Brett.py
 
     # -------------------------
     # TAG ERSTELLEN
@@ -86,6 +88,6 @@ jobs:
       with:
         tag_name: v${{ steps.version.outputs.new_version }}
         name: Schachspiel v${{ steps.version.outputs.new_version }}
-        files: dist/Schach.exe
+        files: dist/Schach_v${{ steps.version.outputs.new_version }}.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
