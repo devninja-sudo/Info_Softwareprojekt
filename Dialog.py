@@ -165,7 +165,7 @@ class Dialog(pygame.sprite.Sprite):
                 self.hideSurface()
                 
 class TextInputDialog(pygame.sprite.Sprite):
-    def __init__(self, DialogWidth:int, DialogHeight:int, centerPosition:tuple[int], headline:str, headlineSize:int, inputSize:int, buttonText:str, buttonSize:int, closeable:bool, onSubmit:Callable|None=None, onVoidClick:Callable|None=None, posOffset:tuple[int, int]=(0,0), onSurfaceChange:Callable=None, maxInputLength:int=24):
+    def __init__(self, DialogWidth:int, DialogHeight:int, centerPosition:tuple[int], headline:str, headlineSize:int, inputSize:int, buttonText:str, buttonSize:int, closeable:bool, onSubmit:Callable|None=None, onVoidClick:Callable|None=None, posOffset:tuple[int, int]=(0,0), onSurfaceChange:Callable=None, maxInputLength:int=24, zweiterKnopfText:str|None=None, wennZweiterButton:Callable|None=None):
         super().__init__()
         self.__initPhase = True
         self.__width:int = DialogWidth
@@ -182,6 +182,8 @@ class TextInputDialog(pygame.sprite.Sprite):
         self.__posOffset = posOffset
         self.__onSurfaceChange = onSurfaceChange
         self.__maxInputLength:int = maxInputLength
+        self.__secondaryButtonText:str|None = zweiterKnopfText
+        self.__wennZweiterButton:Callable|None = wennZweiterButton
         self.__isShown = True
         self.__eingabeWert:str = ""
         self.__cursorSichtbar:bool = True
@@ -240,8 +242,18 @@ class TextInputDialog(pygame.sprite.Sprite):
 
         buttonFont = pygame.font.Font(None, self.__buttonSize)
         self.__buttonSurface = buttonFont.render(self.__buttonText, False, "black").convert()
-        self.__buttonRect = self.__buttonSurface.get_rect(center=(self.__width//2, int(self.__height*0.78)))
+        buttonCenterY = int(self.__height*0.78)
+        if self.__secondaryButtonText == None:
+            self.__buttonRect = self.__buttonSurface.get_rect(center=(self.__width//2, buttonCenterY))
+        else:
+            self.__buttonRect = self.__buttonSurface.get_rect(center=(int(self.__width*0.68), buttonCenterY))
         self.image.blit(self.__buttonSurface, self.__buttonRect)
+
+        self.__secondaryButtonRect = None
+        if self.__secondaryButtonText != None:
+            self.__secondaryButtonSurface = buttonFont.render(self.__secondaryButtonText, False, "black").convert()
+            self.__secondaryButtonRect = self.__secondaryButtonSurface.get_rect(center=(int(self.__width*0.32), buttonCenterY))
+            self.image.blit(self.__secondaryButtonSurface, self.__secondaryButtonRect)
 
         if not(self.__initPhase):
             self.__CallOnSurfaceChange()
@@ -260,6 +272,10 @@ class TextInputDialog(pygame.sprite.Sprite):
             return
         localPos = (pos[0] - self.rect.x - self.__posOffset[0], pos[1] - self.rect.y - self.__posOffset[1])
         didNoAction = True
+        if self.__secondaryButtonRect != None and self.__secondaryButtonRect.collidepoint(localPos):
+            if self.__wennZweiterButton != None:
+                self.__wennZweiterButton()
+            didNoAction = False
         if self.__buttonRect.collidepoint(localPos):
             if self.__onSubmit != None:
                 self.__onSubmit(self.__eingabeWert)
@@ -272,6 +288,10 @@ class TextInputDialog(pygame.sprite.Sprite):
 
     def handleKeyDown(self, event:pygame.event.Event):
         if not(self.__isShown):
+            return
+        if event.key == pygame.K_ESCAPE:
+            if self.__wennZweiterButton != None:
+                self.__wennZweiterButton()
             return
         if event.key == pygame.K_RETURN:
             if self.__onSubmit != None:

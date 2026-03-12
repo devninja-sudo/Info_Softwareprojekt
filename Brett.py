@@ -119,7 +119,7 @@ class Brett(pygame.sprite.Sprite):
         Vor.: Die Startdialoggruppe ist initialisiert.
         Eff.: Der Dialog zur Namenseingabe ist erstellt und aktiv gesetzt.
             Inform einer weißen Box, welche sich ueber das Schachbrett streckt und die Ueberschrift "Name eingeben" traegt.
-            Mit den Unterueberschriften "Weiter", welche Interaktionsmoeglichkeiten darstellen im Bezug zur Ueberschrift.
+            Mit den Unterueberschriften "Zurück" und "Weiter", welche Interaktionsmoeglichkeiten darstellen im Bezug zur Ueberschrift.
             Texteingaben sind in einem Eingabeberreich dargestellt.
         Erg.: -
         '''
@@ -134,7 +134,9 @@ class Brett(pygame.sprite.Sprite):
             onVoidClick=self.__generateImage,
             posOffset=self.rect.topleft,
             onSurfaceChange=self.__generateImage,
-            maxInputLength=24
+            maxInputLength=24,
+            zweiterKnopfText="Zurück",
+            wennZweiterButton=self.__setupStartDialogs
         )
         self.__startDialogGruppe.empty()
         self.__startDialogGruppe.add(self.__nameDialog)
@@ -153,7 +155,7 @@ class Brett(pygame.sprite.Sprite):
             self.rect.width, self.rect.height,
             (self.rect.width//2, self.rect.height//2),
             headline, self.rect.height//14,
-            [["Eigene IP: " + lokaleIp, None], ["IP eingeben", self.__zeigeIpDialog]],
+            [["Eigene IP: " + lokaleIp, None], ["IP eingeben", self.__zeigeIpDialog], ["Zurück", self.__zeigeNameDialog]],
             self.rect.height//10, 0.7, False,
             onVoidClick=self.__generateImage,
             posOffset=self.rect.topleft,
@@ -175,7 +177,9 @@ class Brett(pygame.sprite.Sprite):
             onVoidClick=self.__generateImage,
             posOffset=self.rect.topleft,
             onSurfaceChange=self.__generateImage,
-            maxInputLength=15
+            maxInputLength=15,
+            zweiterKnopfText="Zurück",
+            wennZweiterButton=lambda: self.__zeigeNetzStatusDialog("Warte auf Verbindung")
         )
         self.__startDialogGruppe.empty()
         self.__startDialogGruppe.add(self.__ipDialog)
@@ -494,13 +498,22 @@ class Brett(pygame.sprite.Sprite):
             self.rect.width, self.rect.height, 
             (self.rect.width//2, self.rect.height//2), 
             "Was möchtest du tun?", self.rect.height//8, 
-            [["Neues Spiel!", self.restartGame]], 
+            [["Neues Spiel!", self.restartGame], ["Zurück", self.__resignDialogAusblenden]], 
             self.rect.height//5, 0.4, True, 
             onVoidClick=self.__generateImage, 
             posOffset=self.rect.topleft, 
             onSurfaceChange=self.__generateImage
         )
         self.__DialogGroup.add(self.__resignDialog)
+
+    def __resignDialogAusblenden(self):
+        '''
+        Vor.: Der Aufgabedialog ist initialisiert.
+        Eff.: Der Aufgabedialog ist ausgeblendet und das Brettbild aktualisiert.
+        Erg.: -
+        '''
+        self.__resignDialog.hideSurface()
+        self.__generateImage()
 
     def __reset_game_state(self):
         '''
