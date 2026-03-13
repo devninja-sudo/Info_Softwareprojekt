@@ -56,7 +56,7 @@ class Koenig(FigurBuilder):
                 possibleTurns = self.getNewTurnsListWithAddingRelative(originFieldLabel, possibleTurns, (i, j), self.__mustKill, self.__canKill, self.__hasAnxiety)
         if not(self.getHasMoved()):
             possibleTurns = self.getNewTurnsListWithAddingRelative(originFieldLabel, possibleTurns, (2, 0), False, False, True, "castling", self.convertRelativePointToFieldLabel(originFieldLabel, (3, 0)), Turm, False, self.convertRelativePointToFieldLabel(originFieldLabel, (1, 0)))
-            possibleTurns = self.getNewTurnsListWithAddingRelative(originFieldLabel, possibleTurns, (-2, 0), False, False, True, "castling", self.convertRelativePointToFieldLabel(originFieldLabel, (-4, 0)), Turm, False, self.convertRelativePointToFieldLabel(originFieldLabel, (-2, 0)))
+            possibleTurns = self.getNewTurnsListWithAddingRelative(originFieldLabel, possibleTurns, (-2, 0), False, False, True, "castling", self.convertRelativePointToFieldLabel(originFieldLabel, (-4, 0)), Turm, False, self.convertRelativePointToFieldLabel(originFieldLabel, (-1, 0)))
         return possibleTurns
 
     
