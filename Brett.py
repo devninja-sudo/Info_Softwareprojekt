@@ -332,6 +332,10 @@ class Brett(pygame.sprite.Sprite):
             return
         self.__netzSock = sock
         self.__meinTeam = localTeam
+        if self.__meinTeam == 0:
+            self.setRotation(180)
+        else:
+            self.setRotation(0)
         self.__netzVerbundenEvent.set()
         print("Verbindung hergestellt. Eigenes Team:", localTeam)
         if self.__modusDialog != None:
@@ -1724,4 +1728,5 @@ if __name__ == "__main__":
         TestBrettGroup.draw(screen)
         TestBrettGroup.update()
         pygame.display.update()
+
         clock.tick(60)
