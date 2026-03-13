@@ -332,7 +332,7 @@ class Brett(pygame.sprite.Sprite):
             return
         self.__netzSock = sock
         self.__meinTeam = localTeam
-        if self.__meinTeam == 0:
+        if self.__meinTeam == 1:
             self.setRotation(180)
         else:
             self.setRotation(0)
@@ -1730,3 +1730,4 @@ if __name__ == "__main__":
         pygame.display.update()
 
         clock.tick(60)
+
