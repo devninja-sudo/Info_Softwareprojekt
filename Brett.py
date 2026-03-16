@@ -20,6 +20,8 @@ class Brett(pygame.sprite.Sprite):
           -field_color1- ist vom Typ String und beschreibt die Farbe des ersten Feldmusters.
           -field_color2- ist vom Typ String und beschreibt die Farbe des zweiten Feldmusters.
           -rotation- ist vom Typ Integer und beschreibt die Rotation des Brettes in Grad. Sinnvolle Werte sind Vielfache von 90.
+          Hinweis.: -self.image- ist eine Pygame Surface und beschreibt das Bild des Brettobjektes und -self.rect- die Position und Groesse, bei dem ausgeben dieser auf dem Bildschirm muss damit die Mausklickevents korrekt verarbeitet werden.
+                    Für die Eventverarbeitung ist es erforderlich die dafuer vorgesehende Eventfunktion bei Eventverarbeitung selbst anzusprechen.  
     Eff.: Das Brett, die Felder, die Startdialoge und alle Spiel-/Netzwerk-Zustandsvariablen sind initialisiert.
     Erg.: Eine Brettinstanz ist geliefert, welche -pygame.sprite.Sprite- geerbt hat und fuer den Spielstart vorbereitet ist.
     '''
@@ -93,7 +95,7 @@ class Brett(pygame.sprite.Sprite):
     def __setupStartDialogs(self):
         '''
         Vor.: Das Brett und die Dialoge sind initialisiert.
-        Eff.: Der Startmodus-Dialog ist erstellt und angezeigt. 
+        Eff.: Der Startmodus-Dialog ist erstellt und angezeigt auf -self.image-. 
             Inform einer weißen Box, welche sich ueber das Schachbrett streckt und die Ueberschrift "Spielmodus wählen" traegt.
             Mit den Unterueberschriften "Spiel an einem Rechner" und "Spiel über Netzwerk", welche Interaktionsmoeglichkeiten darstellen im Bezug zur Ueberschrift.
         Erg.: -
@@ -1728,6 +1730,4 @@ if __name__ == "__main__":
         TestBrettGroup.draw(screen)
         TestBrettGroup.update()
         pygame.display.update()
-
         clock.tick(60)
-
