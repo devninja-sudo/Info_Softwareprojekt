@@ -1,12 +1,12 @@
 name: Download Dependencies and Build EXE
 
 on:
-  pull_request:
-    types: [closed]
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-release:
-    if: github.event.pull_request.merged == true
     runs-on: windows-latest
 
     steps:
@@ -14,6 +14,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        fetch-tags: true
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -32,8 +33,11 @@ jobs:
       id: get_tag
       shell: bash
       run: |
-        git fetch --tags
-        TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.00.000")
+        git fetch --force --tags origin
+        TAG=$(git tag --list "v*" --sort=-v:refname | head -n 1)
+        if [ -z "$TAG" ]; then
+          TAG="v0.00.000"
+        fi
         echo "latest=$TAG" >> $GITHUB_OUTPUT
 
     - name: Calculate next version
@@ -45,13 +49,13 @@ jobs:
 
         IFS='.' read -r X YY ZZZ <<< "$VERSION"
 
-        TITLE="${{ github.event.pull_request.title }}"
+        MESSAGE="${{ github.event.head_commit.message }}"
 
-        if [[ "$TITLE" == *"[major]"* ]]; then
+        if [[ "$MESSAGE" == *"[major]"* ]]; then
           X=$((X+1))
           YY=0
           ZZZ=0
-        elif [[ "$TITLE" == *"[minor]"* ]]; then
+        elif [[ "$MESSAGE" == *"[minor]"* ]]; then
           YY=$((YY+1))
           ZZZ=0
         else
