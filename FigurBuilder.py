@@ -265,7 +265,7 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
 
     TestSpringerGroup = pygame.sprite.GroupSingle()
-    TestSpringerGroup.add(FigurBuilder("assets/graphics/s_springer.png", 80, 200, 1))
+    TestSpringerGroup.add(FigurBuilder("assets/graphics/s_springer.png", 80, 200, 1, "a", 0, False))
     
     while True:
         screen.fill("white")

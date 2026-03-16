@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
 
     TestLaeuferGroup = pygame.sprite.GroupSingle()
-    TestLaeufer = Laeufer("assets/graphics/s_turm.png", 80, 400, 1)
+    TestLaeufer = Laeufer("assets/graphics/s_laeufer.png", 80, 400, 1, "a", 0, False)
     TestLaeuferGroup.add(TestLaeufer)
     print(TestLaeufer.getMaybePossibleTurns("a1"))
     while True:

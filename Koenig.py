@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
 
     TestKoenigGroup = pygame.sprite.GroupSingle()
-    TestKoenig = Koenig("assets/graphics/s_koenig.png", 80, 400, 8, "a", 1)
+    TestKoenig = Koenig("assets/graphics/s_koenig.png", 80, 400, 8, "a", 1, False)
     TestKoenigGroup.add(TestKoenig)
     print(TestKoenig.getMaybePossibleTurns("a1"))
     while True:

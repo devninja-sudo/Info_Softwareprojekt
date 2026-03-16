@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
 
     TestSpringerGroup = pygame.sprite.GroupSingle()
-    TestSpringer = Springer("assets/graphics/s_springer.png", 80, 400, 1)
+    TestSpringer = Springer("assets/graphics/s_springer.png", 80, 400, 1, "a", 0, False)
     TestSpringerGroup.add(TestSpringer)
     print(TestSpringer.getMaybePossibleTurns("a1"))
     while True:

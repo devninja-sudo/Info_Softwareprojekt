@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
 
     TestDameGroup = pygame.sprite.GroupSingle()
-    TestDame = Dame("assets/graphics/s_turm.png", 80, 400, 1)
+    TestDame = Dame("assets/graphics/s_turm.png", 80, 400, 1, "a", 0, False)
     TestDameGroup.add(TestDame)
     print(TestDame.getMaybePossibleTurns("a1"))
     while True:

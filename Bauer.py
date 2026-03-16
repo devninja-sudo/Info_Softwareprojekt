@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
 
     TestBauerGroup = pygame.sprite.GroupSingle()
-    BauerDame = Bauer("assets/graphics/s_bauer.png", 80, 400, 1)
+    BauerDame = Bauer("assets/graphics/s_bauer.png", 80, 400, 1, "a", 0, False)
     TestBauerGroup.add(BauerDame)
     print(BauerDame.getMaybePossibleTurns("a1"))
     while True:
