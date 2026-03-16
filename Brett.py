@@ -231,7 +231,7 @@ class Brett(pygame.sprite.Sprite):
             self.__setzeNetzSocket(sock, 0)
             return
         sock.close()
-        self.__zeigeNetzStatusDialog("Handshake fehlgeschlagen")
+        self.__zeigeNetzStatusDialog("Hadnshake fehlgeschlagen")
 
     def __waehleSingleplayer(self):
         '''
@@ -269,7 +269,6 @@ class Brett(pygame.sprite.Sprite):
         Erg.: -
         '''
         self.__netzAktiv = True
-        print("Netzwerkstart auf Host:", socket.gethostname(), "IP:", self.__holeLokaleIp())
         self.__zeigeNetzStatusDialog("Warte auf Verbindung")
         if self.__netzListenerThread == None or not(self.__netzListenerThread.is_alive()):
             self.__netzListenerThread = threading.Thread(target=self.__listenerWorker, daemon=True)
@@ -299,16 +298,13 @@ class Brett(pygame.sprite.Sprite):
         listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         listener.bind(("0.0.0.0", self.__netzPort))
         listener.listen(3)
-        print("Listener aktiv auf Port", self.__netzPort)
         while self.__netzAktiv and not(self.__netzVerbundenEvent.is_set()):
             conn, _addr = listener.accept()
-            print("Eingehende Verbindung von", _addr)
             raw = conn.recv(2048)
             if len(raw) == 0:
                 conn.close()
                 continue
             msgText = raw.decode("utf-8").strip()
-            print("Empfangen:", msgText)
             msgParts = msgText.split(";")
             if len(msgParts) < 2 or msgParts[0] != "ASK":
                 conn.close()
@@ -318,7 +314,6 @@ class Brett(pygame.sprite.Sprite):
                 conn.close()
                 continue
             conn.sendall(("OK;" + self.__spielerName + "\n").encode("utf-8"))
-            print("Antwort gesendet: OK;" + self.__spielerName)
             self.__setzeNetzSocket(conn, 1)
             return
 
@@ -339,7 +334,6 @@ class Brett(pygame.sprite.Sprite):
         else:
             self.setRotation(0)
         self.__netzVerbundenEvent.set()
-        print("Verbindung hergestellt. Eigenes Team:", localTeam)
         if self.__modusDialog != None:
             self.__modusDialog.hideSurface()
         if self.__nameDialog != None:
@@ -736,7 +730,6 @@ class Brett(pygame.sprite.Sprite):
         if len(self.__startDialogGruppe.sprites()) != 0:
             self.__startDialogGruppe.draw(self.image)
         if self.__resignDialog.getIfShown():
-            print("true")
             self.__DialogGroup.draw(self.image)
         for PromoteData in self.__PawnPromotes:
             if PromoteData["Dialog"].getIfShown():
@@ -1015,6 +1008,32 @@ class Brett(pygame.sprite.Sprite):
         self.__PawnPromotes.pop(-1)
         if self.__netzAktiv and not(self.__wendeRemoteZugAn):
             self.__sendeNetzMessage(f"PROMO;{promoteField.getLabel()};{promotionName}")
+        self.__beendeZugnachFigurwahl()
+
+    def __beendeZugnachFigurwahl(self):
+        '''
+        Vor.: Der aktuelle Zug ist abgeschlossen und es sind keine Auswahle mehr offen.
+        Eff.: Zugzaehler und aktives Team werden gewechselt, Eventmodus wird gesetzt und Matt/Remis werden geprueft.
+        Erg.: -
+        '''
+        self.__turnNumber += 1
+        self.__switchToOtherPlayer()
+        self.__eventMode = "chooseFigure"
+        self.__clearAllFieldHighlights()
+        matedTeams = self.checkIfMate()
+        if matedTeams != [-1]:
+            for field in self.__fields.values():
+                if type(field) != Feld:
+                    continue
+                field.addFieldHighlight("GreenOutlineBox")
+                field.addFieldHighlight("SmallGreenMiddleCircle")
+            print("MATT: ", matedTeams)
+        elif not(self.checkIfTeamCanMove(self.__onTurnTeam)):
+            for field in self.__fields.values():
+                if type(field) != Feld:
+                    continue
+                field.addFieldHighlight("GreenOutlineBox")
+            print("Remis durch keine Zugmöglichkeit mehr!")
 
     def __finishTurn(self):
         '''
@@ -1055,24 +1074,11 @@ class Brett(pygame.sprite.Sprite):
                     PromoteInfos["Label"] = field.getLabel()
                     self.__PawnPromotes.append(PromoteInfos)
                     self.__generateImage()
-        self.__turnNumber += 1
-        self.__switchToOtherPlayer()
-        self.__eventMode = "chooseFigure"
-        self.__clearAllFieldHighlights()
-        matedTeams = self.checkIfMate()
-        if matedTeams != [-1]:
-            for field in self.__fields.values():
-                if type(field) != Feld:
-                    continue
-                field.addFieldHighlight("GreenOutlineBox")
-                field.addFieldHighlight("SmallGreenMiddleCircle")
-            print("MATT: ", matedTeams)
-        elif not(self.checkIfTeamCanMove(self.__onTurnTeam)):
-            for field in self.__fields.values():
-                if type(field) != Feld:
-                    continue
-                field.addFieldHighlight("GreenOutlineBox")
-            print("Remis, durch keine Zugmöglichkeit mehr!")
+        # Solange eine Promotion aussteht, bleibt der Zug beim aktuellen Spieler.
+        if len(self.__PawnPromotes) != 0:
+            self.__eventMode = "chooseFigure"
+            return
+        self.__beendeZugnachFigurwahl()
     
     def checkIfTeamCanMove(self, team:int):
         '''
