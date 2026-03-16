@@ -165,6 +165,18 @@ class Dialog(pygame.sprite.Sprite):
                 self.hideSurface()
                 
 class TextInputDialog(pygame.sprite.Sprite):
+    '''
+    Vor.: -DialogWidth- und -DialogHeight- sind nicht negativ.
+        -centerPosition- ist ein Tuple mit genau zwei Integern fuer die Mittelpunktposition.
+        -headline- und -buttonText- sind Strings.
+        -headlineSize-, -inputSize-, -buttonSize- und -maxInputLength- sind positive Integer.
+        -closeable- ist ein Bool.
+        -onSubmit-, -onVoidClick-, -onSurfaceChange- und -wennZweiterButton- sind entweder None oder aufrufbare Objekte.
+        -zweiterKnopfText- ist None oder ein String.
+    Eff.: Initialisiert ein Dialog-Sprite mit Eingabefeld, Hauptbutton und evtl Zweitbutton.
+        Der aktuelle Eingabewert ist leer, der Dialog ist sichtbar und eone Surface ist erstellt.
+    Erg.: Eine TextInputDialog-Instanz ist geliefert.
+    '''
     def __init__(self, DialogWidth:int, DialogHeight:int, centerPosition:tuple[int], headline:str, headlineSize:int, inputSize:int, buttonText:str, buttonSize:int, closeable:bool, onSubmit:Callable|None=None, onVoidClick:Callable|None=None, posOffset:tuple[int, int]=(0,0), onSurfaceChange:Callable=None, maxInputLength:int=24, zweiterKnopfText:str|None=None, wennZweiterButton:Callable|None=None):
         super().__init__()
         self.__initPhase = True
@@ -192,35 +204,77 @@ class TextInputDialog(pygame.sprite.Sprite):
         self.__initPhase = False
 
     def __CallOnSurfaceChange(self):
+        '''
+        Vor.: -
+        Eff.: Wenn -onSurfaceChange- gesetzt ist, wird die Funktion exakt genau einmal aufgerufen.
+        Erg.: -
+        '''
         if self.__onSurfaceChange == None:
             return
         self.__onSurfaceChange()
 
     def setHeadline(self, headline:str):
+        '''
+        Vor.: -headline- ist ein String.
+        Eff.: Setzt die Überschrift und erstellt die Dialog-Surface neu.
+        Erg.: -
+        '''
         self.__headline = headline
         self.makeSurface()
 
     def getValue(self)->str:
+        '''
+        Vor.: -
+        Eff.: -
+        Erg.: Der aktuelle Eingabetext ist geliefert.
+        '''
         return self.__eingabeWert
 
     def clearValue(self):
+        '''
+        Vor.: -
+        Eff.: Der gespeicherte Eingabetext wird auf den leeren String gesetzt und die Surface neu erstellt.
+        Erg.: -
+        '''
         self.__eingabeWert = ""
         self.makeSurface()
 
     def showSurface(self):
+        '''
+        Vor.: -
+        Eff.: Der Dialog wird als sichtbar markiert und komplett neu gezeichnet.
+        Erg.: -
+        '''
         self.__isShown = True
         self.makeSurface()
 
     def hideSurface(self):
+        '''
+        Vor.: -
+        Eff.: Der Dialog wird als unsichtbar markiert, -self.image- weiss gefuellt und ggf. -onSurfaceChange- ausgelöst.
+        Erg.: -
+        '''
         self.__isShown = False
         self.image.fill("white")
         if not(self.__initPhase):
             self.__CallOnSurfaceChange()
 
     def getIfShown(self):
+        '''
+        Vor.: -
+        Eff.: -
+        Erg.: Es ist geliefert, ob der Dialog aktuell als sichtbar markiert ist.
+        '''
         return self.__isShown
 
     def makeSurface(self):
+        '''
+        Vor.: -
+        Eff.: Erstellt -self.image- und -self.rect-, zeichnet Rahmen, Ueberschrift, Eingabefeld,
+            Buttons.
+            Wenn nicht in der init, wird -onSurfaceChange- aufgerufen.
+        Erg.: -
+        '''
         self.image:pygame.surface.Surface = pygame.surface.Surface((self.__width, self.__height))
         self.image.fill("white")
         self.rect:pygame.rect.Rect = self.image.get_rect(center = self.__centerPosition)
@@ -259,6 +313,11 @@ class TextInputDialog(pygame.sprite.Sprite):
             self.__CallOnSurfaceChange()
 
     def update(self):
+        '''
+        Vor.: -
+        Eff.: Solange der Dialog sichtbar ist, blinkt der Cursor im Eingabefeld. Da keine Animation wird für jedes Blinken die Surface neu gezeichnet.
+        Erg.: -
+        '''
         if not(self.__isShown):
             return
         jetzt = pygame.time.get_ticks()
@@ -268,6 +327,14 @@ class TextInputDialog(pygame.sprite.Sprite):
             self.makeSurface()
 
     def handleLeftClick(self, pos:tuple[int, int]):
+        '''
+        Vor.: -pos- ist ein Tuple aus zwei Integern (Mausposition im Fenster).
+        Eff.: Verarbeitet einen Linksklick relativ zum Dialog:
+            Klick auf Zweitbutton ruft -wennZweiterButton- auf,
+            Klick auf Hauptbutton ruft -onSubmit- mit aktuellem Eingabetext auf,
+            ansonsten wird ggf. -onVoidClick- ausgefuehrt und bei -closeable=True- der Dialog versteckt.
+        Erg.: -
+        '''
         if not(self.__isShown):
             return
         localPos = (pos[0] - self.rect.x - self.__posOffset[0], pos[1] - self.rect.y - self.__posOffset[1])
@@ -287,11 +354,16 @@ class TextInputDialog(pygame.sprite.Sprite):
                 self.hideSurface()
 
     def handleKeyDown(self, event:pygame.event.Event):
+        '''
+        Vor.: -event- ist ein pygame.KEYDOWN-Event mit gueltigen Attributen -key- und -unicode-.
+        Eff.: Verarbeitet Tastatureingaben fuer den Dialog:
+            ENTER ruft -onSubmit- mit aktuellem Eingabetext auf,
+            BACKSPACE entfernt das letzte Zeichen,
+            sonst wird ein druckbares Einzelzeichen (bis -maxInputLength-) angehaengt.
+            Bei Textaenderung wird die Surface neu erstellt.
+        Erg.: -
+        '''
         if not(self.__isShown):
-            return
-        if event.key == pygame.K_ESCAPE:
-            if self.__wennZweiterButton != None:
-                self.__wennZweiterButton()
             return
         if event.key == pygame.K_RETURN:
             if self.__onSubmit != None:
